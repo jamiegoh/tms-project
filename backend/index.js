@@ -11,8 +11,10 @@ require("dotenv").config();
 app.use(cors(corsOptions));
 
 const userRoutes = require('./routes/users');
+const groupRoutes = require('./routes/groups');
 
 app.use('/users', userRoutes);
+app.use('/groups', groupRoutes);
   
   app.listen(8000, () => {
     console.log("Server started on port 8000");

@@ -18,12 +18,19 @@ export default function Users() {
   const [users, setUsers] = useState([]);
 
   const fetchUsers = axios
-    .get("http://localhost:8000/users")
+    .get("http://localhost:8000/users/get")
     .then((response) => {
       return response.data;
     })
     .catch((error) => {
       console.error("Error fetching data:", error);
+    });
+
+    const fetchGroups = axios.get("http://localhost:8000/groups/get").then((response) => {
+        return response.data;
+        }
+    ).catch((error) => {
+        console.error("Error fetching data:", error);
     });
 
   useEffect(() => {

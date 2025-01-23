@@ -1,17 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
+const { createUser, getUsers } = require('../controllers/usersController');
+
 const db = require('../db');
 
-router.get("/get", async (req, res) => {
-    try {
-        const [users] = await db.execute("SELECT * FROM users");
-        
-        res.json({ users: users });
-    } catch (err) {
-        console.error("Error selecting data:", err);
-        res.status(500).json({ message: 'Error selecting data', error: err });
-    }
-});
+router.get("/get", getUsers);
+router.post("/create", createUser);
 
-  module.exports = router;
+
+module.exports = router;
