@@ -1,6 +1,7 @@
 
 
 const db = require('../db');
+var bcrypt = require('bcryptjs');
 
 const getUsers = async (req, res) => {
     try {
@@ -16,22 +17,26 @@ const getUsers = async (req, res) => {
 const createUser = async (req, res) => {
     try{
         //only username and password are required
-        const {username, password, email, group, status} = req.body;
+        const {username, password, inputEmail, inputGroup, enabled} = req.body;
+        let email = inputEmail || null;
+
         if(!username || !password){
             return res.status(400).json({message: 'Username and password are required'});
         }
         //check if user already exists
-        const [existingUsers] = await db.execute("SELECT * FROM users WHERE username = ?", [username]);
+        const [existingUsers] = await db.execute("SELECT * FROM users WHERE user_username = ?", [username]);
 
         //if user exists, return error
         if(existingUsers.length > 0){
             return res.status(400).json({message: 'User already exists'});
         }
 
-        //create user
-        await db.execute("INSERT INTO users (username, password, email, group, status) VALUES (?, ?, ?, ?, ?)", [username, password, email, group, status]);
-        res.json({message: 'User created'});
-
+        bcrypt.genSalt(10, function(err, salt) {
+            bcrypt.hash(password, salt, async function(err, hash) {
+                await db.execute("INSERT INTO users (user_username, user_password, user_email, user_enabled) VALUES (?, ?, ?, ? )", [username, hash, email, enabled]);
+                return res.json({message: 'User created'});
+            });
+        });
     }
     catch (err) {
         console.error("Error creating user:", err);
