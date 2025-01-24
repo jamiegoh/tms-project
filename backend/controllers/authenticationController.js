@@ -21,7 +21,8 @@ const authenticateUser = async (req, res) => {
         bcrypt.compare(password, users[0].user_password, function(err, result) {
             if(result){
                 //generate token
-                const token = jwt.sign({username: users[0].user_username}, process.env.JWT_SECRET_KEY, {expiresIn : '7days'});
+                const payload = {username: users[0].user_username, ip: req.ip, browserType: req.headers['user-agent']};
+                const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {expiresIn : '7days'});
                 res.cookie('token', token, {httpOnly: true});
                 return res.json({message: 'Authentication successful'});
             }
