@@ -26,28 +26,32 @@ const getGroups = async (req, res) => {
     }
 };
 
-const getGroupForSpecificUser = async (username) => {
+
+const getGroupsForSpecificUser = async (req, res) => {
     try {
+        const username = req.user.user.username;
         const [groups] = await db.execute(
             "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
         );
-
-        return groups.map(group => group.user_group_groupName);
-    } catch (err) {
-        console.error("Error selecting data:", err);
-        throw err; 
-    }
-};
-
-const getGroupsForSpecificUserEP = async (req, res) => {
-    try {
-        const username = req.user.user.username;
-        const groups = await getGroupForSpecificUser(username);
-        res.json(groups);
+        const response = groups.map(group => group.user_group_groupName);
+        res.json(response);
     } catch (err) {
         console.error("Error selecting data:", err);
         res.status(500).json({ message: 'Error selecting data', error: err });
     }
 };
 
-module.exports = {getGroupsByUser, getGroups, getGroupForSpecificUser, getGroupsForSpecificUserEP};
+const checkGroup = async (username, group) => {
+    try {
+        const [groups] = await db.execute(
+            "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
+        );
+
+        return groups.some(g => g.user_group_groupName === group);
+    } catch (err) {
+        console.error("Error selecting data:", err);
+        throw err; 
+    }
+};
+
+module.exports = {getGroupsByUser, getGroups, getGroupsForSpecificUser, checkGroup};

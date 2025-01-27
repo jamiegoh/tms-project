@@ -2,7 +2,7 @@
 const db = require('../db');
 var bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
-const { getGroupForSpecificUser } = require('./groupsController');
+
 
 const authenticateUser = async (req, res) => {
     //check against bcryptjs hash and return token

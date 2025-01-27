@@ -4,7 +4,7 @@ import axios from "axios";
 import checkUserToken from "../utils/checkUserToken";
 
 const ProtectedRoute = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(null); // Start with `null` to indicate loading
+    const [isAuthenticated, setIsAuthenticated] = useState(null); 
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

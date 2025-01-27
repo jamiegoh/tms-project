@@ -18,6 +18,7 @@ import getUserPerms from "../utils/getUserPerms.js";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [perms, setPerms] = React.useState([]);
 
   const navigate = useNavigate();
@@ -42,6 +43,11 @@ export default function Users() {
     fetchUsers.then((data) => {
       setUsers(data.users);
     });
+
+    fetchGroups.then((data) => {
+        setGroups(data.groups);
+    });
+
     getUserPerms().then((perms) => {
         if(!perms.includes("admin")) {
           navigate("/");
@@ -50,6 +56,7 @@ export default function Users() {
     });
 
   }, []);
+
 
   return (
     <div>
@@ -101,8 +108,11 @@ export default function Users() {
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <Select>
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="user">User</MenuItem>
+                  {groups.map((group, i) => (
+                    <MenuItem key={i} value={group.group_name}>
+                      {group.group_name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 <TableCell>
                   <Switch />

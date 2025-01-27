@@ -1,6 +1,8 @@
 const db = require("../db");
 const jwt = require("jsonwebtoken");
-const { getGroupForSpecificUser } = require("../controllers/groupsController");
+const { checkGroup } = require("../controllers/groupsController");
+
+
 
 exports.checkPermissions = async (req, res, next) => {
 
@@ -9,11 +11,7 @@ exports.checkPermissions = async (req, res, next) => {
 
     const user = jwt.decode(token).user.username;
 
-    const group = await getGroupForSpecificUser(user);
-
-    console.log("checking permissions for group: ", group);
-
-    if(group.includes("admin")){
+    if(checkGroup({user, group: "admin"}).length > 0){
         next();
     }
     else{
