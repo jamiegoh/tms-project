@@ -26,4 +26,17 @@ const getGroups = async (req, res) => {
     }
 };
 
-module.exports = {getGroupsByUser, getGroups};
+const getGroupForSpecificUser = async (username) => {
+    try {
+        const [groups] = await db.execute(
+            "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
+        );
+
+        return groups.map(group => group.user_group_groupName);
+    } catch (err) {
+        console.error("Error selecting data:", err);
+        throw err; 
+    }
+};
+
+module.exports = {getGroupsByUser, getGroups, getGroupForSpecificUser};

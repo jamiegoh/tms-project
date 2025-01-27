@@ -1,27 +1,38 @@
-
 const jwt = require('jsonwebtoken');
+const db = require('../db'); // Import the database connection at the top
 
-exports.cookieAuthentication = (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized' });
+exports.cookieAuthentication = async (req, res, next) => {
+  const token = req.cookies.token;
+
+  // Check if the token exists
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized: No token provided' });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+    console.log("USER OBJECT", user);
+   
+    const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [user.user.username]);
+
+    if (users.length === 0) {
+      res.clearCookie('token'); 
+      return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-        if (err) {
-            res.clearCookie('token');
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
 
-        db.execute("SELECT * FROM users WHERE user_username = ?", [user.username]).then(([users]) => {
-            if (users.length === 0) {
-                return res.status(401).json({ message: 'Unauthorized' });
-            }
-            if (req.ip !== user.ip | req.headers['user-agent'] !== user.browserType) {
-                return res.status(401).json({ message: 'Unauthorized' });
-            }
-        });
-        
-        req.user = user;
-        next();
-    });
-}
+    if (req.ip !== user.ip || req.headers['user-agent'] !== user.browserType) {
+      res.clearCookie('token'); 
+      return res.status(401).json({ message: 'Unauthorized: Session mismatch' });
+    }
+
+   
+    req.user = user;
+    next();
+    
+  } catch (err) {
+    console.error('Error verifying token:', err);
+    res.clearCookie('token'); 
+    res.status(401).json({ message: 'Unauthorized: Invalid token' });
+  }
+};

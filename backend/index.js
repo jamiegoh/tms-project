@@ -19,9 +19,10 @@ const userRoutes = require('./routes/users');
 const groupRoutes = require('./routes/groups');
 const authRoutes = require('./routes/auth');
 const { cookieAuthentication } = require("./middleware/authentication");
+const { checkPermissions } = require("./middleware/permissions");
 
-app.use('/users', cookieAuthentication, userRoutes);
-app.use('/groups',cookieAuthentication, groupRoutes);
+app.use('/users', cookieAuthentication, checkPermissions, userRoutes);
+app.use('/groups',cookieAuthentication, checkPermissions, groupRoutes);
 app.use('/auth', authRoutes);
   
   app.listen(8000, () => {

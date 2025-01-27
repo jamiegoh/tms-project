@@ -2,6 +2,7 @@
 const db = require('../db');
 var bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
+const { getGroupForSpecificUser } = require('./groupsController');
 
 const authenticateUser = async (req, res) => {
     //check against bcryptjs hash and return token
@@ -18,10 +19,13 @@ const authenticateUser = async (req, res) => {
             return res.status(400).json({message: 'Authentication failed'});
         }
 
+        const user_group = getGroupForSpecificUser(username);
+
         bcrypt.compare(password, users[0].user_password, function(err, result) {
             if(result){
                 //generate token
-                const payload = {username: users[0].user_username, ip: req.ip, browserType: req.headers['user-agent']};
+                const user = {username: users[0].user_username};
+                const payload = {user: user, ip: req.ip, browserType: req.headers['user-agent']};
                 const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {expiresIn : '7days'});
                 res.cookie('token', token, {httpOnly: true});
                 return res.json({message: 'Authentication successful'});
