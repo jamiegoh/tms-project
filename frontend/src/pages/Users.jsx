@@ -13,9 +13,14 @@ import {
   Switch,
   Button
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import getUserPerms from "../utils/getUserPerms.js";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
+  const [perms, setPerms] = React.useState([]);
+
+  const navigate = useNavigate();
 
   const fetchUsers = axios
     .get("http://localhost:8000/users/get")
@@ -37,12 +42,19 @@ export default function Users() {
     fetchUsers.then((data) => {
       setUsers(data.users);
     });
+    getUserPerms().then((perms) => {
+        if(!perms.includes("admin")) {
+          navigate("/");
+        }
+        setPerms(perms);
+    });
+
   }, []);
 
   return (
     <div>
       <Header />
-      <div
+      {perms.includes('admin') ? <div
         sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
       >
         <h1>Users</h1>
@@ -102,7 +114,7 @@ export default function Users() {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </div>  : null}
     </div>
   );    
 }

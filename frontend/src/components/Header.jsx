@@ -1,12 +1,34 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
-import Box from "@mui/material/Box";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Box, Button } from "@mui/material";
 
 import { useLocation } from "react-router-dom";
-
+import getUserPerms from "../utils/getUserPerms.js";
+import axios from "axios";
 
 const Header = () => {
   const pathname = useLocation().pathname;
+
+  const [perms, setPerms] = React.useState([]);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await axios
+      .post("auth/logout")
+      .then((response) => {
+        navigate("/login");
+      })
+      .catch((error) => {
+        console.error("Error logging out:", error);
+      });
+  };
+
+  React.useEffect(() => {
+    getUserPerms().then((perms) => {
+      setPerms(perms);
+    });
+  }, []);
+
   return (
     <div>
       <Box
@@ -25,11 +47,14 @@ const Header = () => {
           <nav
             style={{ display: "flex", flex: 2, gap: 50, alignItems: "center" }}
           >
-            <NavLink to="/">Home</NavLink>
-            <NavLink to="/about">About</NavLink>
-            <NavLink to="/users">Users</NavLink>
+            <NavLink to="/">Task Management</NavLink>
+
+            {perms.includes("admin") ? (
+              <NavLink to="/users">User Management</NavLink>
+            ) : null}
           </nav>
-        ) : null }
+        ) : null}
+        <Button onClick={handleLogout}>Log out</Button>
       </Box>
     </div>
   );

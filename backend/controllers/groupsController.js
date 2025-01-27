@@ -39,4 +39,15 @@ const getGroupForSpecificUser = async (username) => {
     }
 };
 
-module.exports = {getGroupsByUser, getGroups, getGroupForSpecificUser};
+const getGroupsForSpecificUserEP = async (req, res) => {
+    try {
+        const username = req.user.user.username;
+        const groups = await getGroupForSpecificUser(username);
+        res.json(groups);
+    } catch (err) {
+        console.error("Error selecting data:", err);
+        res.status(500).json({ message: 'Error selecting data', error: err });
+    }
+};
+
+module.exports = {getGroupsByUser, getGroups, getGroupForSpecificUser, getGroupsForSpecificUserEP};

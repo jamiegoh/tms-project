@@ -16,10 +16,8 @@ const authenticateUser = async (req, res) => {
         const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [username]);
 
         if(users.length === 0){
-            return res.status(400).json({message: 'Authentication failed'});
+            return res.status(401).json({message: 'Authentication failed'});
         }
-
-        const user_group = getGroupForSpecificUser(username);
 
         bcrypt.compare(password, users[0].user_password, function(err, result) {
             if(result){
@@ -31,7 +29,7 @@ const authenticateUser = async (req, res) => {
                 return res.json({message: 'Authentication successful'});
             }
             else{
-                return res.status(400).json({message: 'Authentication failed'});
+                return res.status(401).json({message: 'Authentication failed'});
             }
         });
     }
@@ -42,4 +40,14 @@ const authenticateUser = async (req, res) => {
 
 }
 
-module.exports = {authenticateUser};
+const logoutUser = async (req, res) => {
+    res.clearCookie('token');
+    return res.json({message: 'Logged out successfully'});
+}
+
+const checkUser = async (req, res) => {
+    const isAuthenticated = req.cookies.token !== undefined; 
+  res.json({ isAuthenticated });
+}
+
+module.exports = {authenticateUser, logoutUser, checkUser};
