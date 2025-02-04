@@ -115,6 +115,14 @@ export default function Users() {
     }
 
     try {
+
+      const newUser = {
+        user_username: username,
+        user_email: email,
+        groups: selectedGroups,
+        user_enabled: status,
+      };
+
       const response = await axios.post("http://localhost:8000/users/create", {
         username,
         password,
@@ -123,9 +131,7 @@ export default function Users() {
         enabled: status,
       });
 
-      fetchUsers.then((data) => {
-        setUsers(data.users);
-      });
+      setUsers([...users, newUser]);
 
       setSnackbarInfo({
         message: "User created successfully.",
@@ -145,7 +151,7 @@ export default function Users() {
   const handleUpdate = async (user, i) => {
     try {
 
-      if (!validatePassword(updatedUserPassword[i])) {
+      if (updatedUserPassword[i] && !validatePassword(updatedUserPassword[i])) {
         setSnackbarInfo({
           message:
             "Password must be 8-10 characters long and include alphabets, numbers, and special characters.",
@@ -166,7 +172,7 @@ export default function Users() {
       const updatedUsers = users.map((u) =>
         u.user_username === user.user_username ? user : u
       );
-      setUsers(updatedUsers);
+      setUsers([...updatedUsers]);
 
       setSnackbarInfo({
         message: "User updated successfully.",
