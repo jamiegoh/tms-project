@@ -11,8 +11,6 @@ exports.cookieAuthentication = async (req, res, next) => {
 
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
-    console.log("USER OBJECT", user);
    
     const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [user.user.username]);
 

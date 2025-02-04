@@ -11,7 +11,7 @@ exports.checkPermissions = async (req, res, next) => {
 
     const user = jwt.decode(token).user.username;
 
-    if(checkGroup({user, group: "admin"}).length > 0){
+    if(await checkGroup({user, group: "admin"})){
         next();
     }
     else{

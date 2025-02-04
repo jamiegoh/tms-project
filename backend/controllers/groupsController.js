@@ -43,10 +43,11 @@ const getGroupsForSpecificUser = async (req, res) => {
 
 const checkGroup = async (username, group) => {
     try {
-        const [groups] = await db.execute(
-            "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
+        
+        const groups = await db.execute(
+            "SELECT user_group_groupName FROM user_group WHERE user_group_username = ?", [username]
         );
-
+        console.log(groups);
         return groups.some(g => g.user_group_groupName === group);
     } catch (err) {
         console.error("Error selecting data:", err);
