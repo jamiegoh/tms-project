@@ -19,9 +19,10 @@ import { useNavigate } from "react-router-dom";
 import getUserPerms from "../utils/getUserPerms.js";
 
 export default function Users() {
+
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [perms, setPerms] = React.useState([]);
+  const [perms, setPerms] = useState([]);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +30,13 @@ export default function Users() {
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [status, setStatus] = useState(true);
 
-  const [error, setError] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [updatedUserPassword, setUpdatedUserPassword] = useState([]);
+
+  const [snackbarInfo, setSnackbarInfo] = useState({
+    message: "",
+    severity: "error", 
+    open: false,
+  });
 
   const navigate = useNavigate();
 
@@ -63,11 +69,11 @@ export default function Users() {
 
     getUserPerms().then((perms) => {
       if (!perms.includes("admin")) {
-        navigate("/");
+        navigate("/home");
       }
       setPerms(perms);
     });
-  }, []);
+  }, []); 
 
   const validatePassword = (password) => {
     const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,10}$/;
@@ -80,17 +86,31 @@ export default function Users() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+
+    if (!username || !password) {
+      setSnackbarInfo({
+        message: "Username and password are required.",
+        severity: "error",
+        open: true,
+      });
+      return;
+    }
     if (!validatePassword(password)) {
-      setError(
-        "Password must be 8-10 characters long and include alphabets, numbers, and special characters."
-      );
-      setOpenSnackbar(true);
+      setSnackbarInfo({
+        message:
+          "Password must be 8-10 characters long and include alphabets, numbers, and special characters.",
+        severity: "error",
+        open: true,
+      });
       return;
     }
 
     if (!validateUsername(username)) {
-      setError("Username already exists.");
-      setOpenSnackbar(true);
+      setSnackbarInfo({
+        message: "Username already exists.",
+        severity: "error",
+        open: true,
+      });
       return;
     }
 
@@ -106,47 +126,75 @@ export default function Users() {
       fetchUsers.then((data) => {
         setUsers(data.users);
       });
+
+      setSnackbarInfo({
+        message: "User created successfully.",
+        severity: "success",
+        open: true,
+      });
     } catch (error) {
       console.error("Error creating user:", error);
-      setError("Failed to create user. Please try again.");
-      setOpenSnackbar(true);
+      setSnackbarInfo({
+        message: "Failed to create user. Please try again.",
+        severity: "error",
+        open: true,
+      });
     }
   };
 
-  const handleUpdate = async (user) => {
+  const handleUpdate = async (user, i) => {
     try {
+
+      if (!validatePassword(updatedUserPassword[i])) {
+        setSnackbarInfo({
+          message:
+            "Password must be 8-10 characters long and include alphabets, numbers, and special characters.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+
+      await axios.post("http://localhost:8000/users/update", {
+        username: user.user_username,
+        inputPassword: updatedUserPassword[i],
+        inputEmail: user.user_email,
+        inputGroup: user.groups,
+        enabled: user.user_enabled,
+      });
+
       const updatedUsers = users.map((u) =>
         u.user_username === user.user_username ? user : u
       );
       setUsers(updatedUsers);
 
-      console.log("user", user);
-
-      await axios.post("http://localhost:8000/users/update", {
-        username: user.user_username,
-        password: user.user_password,
-        inputEmail: user.user_email,
-        inputGroup: user.groups,
-        enabled: user.user_enabled,
+      setSnackbarInfo({
+        message: "User updated successfully.",
+        severity: "success",
+        open: true,
       });
     } catch (error) {
       console.error("Error updating user:", error);
-      setError("Failed to update user. Please try again.");
-      setOpenSnackbar(true);
+      setSnackbarInfo({
+        message: "Failed to update user. Please try again.",
+        severity: "error",
+        open: true,
+      });
     }
   };
 
   const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+    setSnackbarInfo((prevInfo) => ({
+      ...prevInfo,
+      open: false,
+    }));
   };
 
   return (
     <div>
       <Header />
       {perms.includes("admin") ? (
-        <div
-          sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-        >
+        <div>
           <h1>Users</h1>
           <Table>
             <TableHead>
@@ -214,11 +262,11 @@ export default function Users() {
                     <TextField
                       label="New Password"
                       variant="outlined"
-                      value=""
+                      value={updatedUserPassword[i]}
                       onChange={(e) => {
-                        const updatedUsers = [...users];
-                        updatedUsers[i].user_password = e.target.value;
-                        setUsers(updatedUsers);
+                        const updatedUserPasswordCopy = [...updatedUserPassword];
+                        updatedUserPasswordCopy[i] = e.target.value;
+                        setUpdatedUserPassword(updatedUserPasswordCopy);
                       }}
                     />
                   </TableCell>
@@ -229,7 +277,7 @@ export default function Users() {
                       value={user.user_email || ""}
                       onChange={(e) => {
                         const updatedUsers = [...users];
-                        updatedUsers[i].email = e.target.value;
+                        updatedUsers[i].user_email = e.target.value;
                         setUsers(updatedUsers);
                       }}
                     />
@@ -264,7 +312,7 @@ export default function Users() {
                   <TableCell>
                     <Button
                       variant="contained"
-                      onClick={() => handleUpdate(user)}
+                      onClick={() => handleUpdate(user, i)}
                     >
                       Update
                     </Button>
@@ -276,12 +324,16 @@ export default function Users() {
         </div>
       ) : null}
       <Snackbar
-        open={openSnackbar}
+        open={snackbarInfo.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
       >
-        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: "100%" }}>
-          {error}
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarInfo.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarInfo.message}
         </Alert>
       </Snackbar>
     </div>

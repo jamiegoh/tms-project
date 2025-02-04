@@ -54,4 +54,6 @@ const checkUser = async (req, res) => {
   res.json({ isAuthenticated });
 }
 
+
+
 module.exports = {authenticateUser, logoutUser, checkUser};

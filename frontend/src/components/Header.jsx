@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Box, Button } from "@mui/material";
 
@@ -9,14 +9,16 @@ import axios from "axios";
 const Header = () => {
   const pathname = useLocation().pathname;
 
-  const [perms, setPerms] = React.useState([]);
+  const [perms, setPerms] = useState([]);
+  const [currUser, setCurrUser] = useState("");
+
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await axios
       .post("auth/logout")
       .then((response) => {
-        navigate("/login");
+        navigate("/");
       })
       .catch((error) => {
         console.error("Error logging out:", error);
@@ -27,7 +29,20 @@ const Header = () => {
     getUserPerms().then((perms) => {
       setPerms(perms);
     });
+
+    getCurrentUser().then((response) => {
+      setCurrUser(response);
+    });
   }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const response = await axios.get("/users/current");
+      return response.data.user;
+    } catch (error) {
+      console.error("Error getting current user:", error);
+    }
+  };
 
   return (
     <div>
@@ -47,14 +62,18 @@ const Header = () => {
           <nav
             style={{ display: "flex", flex: 2, gap: 50, alignItems: "center" }}
           >
-            <NavLink to="/">Task Management</NavLink>
+            <NavLink to="/home">Task Management</NavLink>
 
             {perms.includes("admin") ? (
               <NavLink to="/users">User Management</NavLink>
             ) : null}
           </nav>
         ) : null}
+        <Box style={{display: 'flex', gap: 10}}>
+          <h4>Logged in as: {currUser}</h4>
+        <Button onClick={() => navigate("/profile")}>Profile</Button>
         <Button onClick={handleLogout}>Log out</Button>
+        </Box>
       </Box>
     </div>
   );

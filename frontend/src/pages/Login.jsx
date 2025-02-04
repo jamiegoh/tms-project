@@ -27,7 +27,7 @@ const Login = () => {
         password: password,
       });
       if (response.status === 200) {
-        navigate("/");
+        navigate("/home");
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {

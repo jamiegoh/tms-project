@@ -5,7 +5,7 @@ var bcrypt = require('bcryptjs');
 
 const getUsers = async (req, res) => {
     try {
-           const [users] = await db.execute("SELECT * FROM users");
+           const [users] = await db.execute("SELECT user_username, user_email, user_enabled FROM users");
               for (let i = 0; i < users.length; i++) {
                 const [groups] = await db.execute("SELECT user_group_groupName FROM user_group WHERE user_group_username = ?", [users[i].user_username]);
                 users[i].groups = groups.map(group => group.user_group_groupName);
@@ -28,6 +28,17 @@ const getSpecificUser = async (username) => {
     } catch (err) {
         console.error("Error selecting data:", err);
         throw err;
+    }
+};
+
+const getSpecificUserByUsername = async (req, res) => {
+    try {
+        const {username} = req.user.user;
+        const user = await getSpecificUser(username);
+        res.json({ user });
+    } catch (err) {
+        console.error("Error selecting data:", err);
+        res.status(500).json({ message: 'Error selecting data', error: err });
     }
 };
 
@@ -140,4 +151,33 @@ const updateUser = async (req, res) => {
     }
 }
 
-module.exports = {getUsers, createUser, updateUser};
+const currentUser = async (req, res) => {
+    const user = req.user.user.username;
+    res.json({user});
+};
+
+const updateSelf = async (req, res) => {
+    try {
+        const {username} = req.user.user;
+        const {inputPassword, inputEmail} = req.body;
+
+        if(inputPassword){
+            bcrypt.genSalt(10, function(err, salt) {
+                bcrypt.hash(inputPassword, salt, async function(err, hash) {
+                    await db.execute("UPDATE users SET user_password = ? WHERE user_username = ?", [hash, username]);
+                });
+            });}    
+        
+        if(inputEmail){
+            await db.execute("UPDATE users SET user_email = ? WHERE user_username = ?", [inputEmail, username]);
+        }
+
+        return res.json({message: 'User updated'});
+}
+    catch (err) {
+        console.error("Error updating user:", err);
+        res.status(500).json({ message: 'Error updating user', error: err });
+    }
+};
+
+module.exports = {getUsers, createUser, updateUser, currentUser, updateSelf, getSpecificUserByUsername};
