@@ -47,7 +47,8 @@ const checkGroup = async (username, group) => {
         const groups = await db.execute(
             "SELECT user_group_groupName FROM user_group WHERE user_group_username = ?", [username]
         );
-        console.log(groups);
+        const groupNames = groups.map(group => group.user_group_groupName);
+        console.log("groupNames", groupNames);
         return groups.some(g => g.user_group_groupName === group);
     } catch (err) {
         console.error("Error selecting data:", err);

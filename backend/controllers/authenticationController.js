@@ -15,6 +15,10 @@ const authenticateUser = async (req, res) => {
 
         const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [username]);
 
+        if(users[0].user_enabled === false){
+            return res.status(401).json({message: 'Authentication failed'});
+        }
+
         if(users.length === 0){
             return res.status(401).json({message: 'Authentication failed'});
         }

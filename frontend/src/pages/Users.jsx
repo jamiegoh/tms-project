@@ -26,7 +26,7 @@ export default function Users() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [group, setGroup] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
   const [status, setStatus] = useState(true);
 
   const [error, setError] = useState("");
@@ -61,8 +61,6 @@ export default function Users() {
       setGroups(data);
     });
 
-
-
     getUserPerms().then((perms) => {
       if (!perms.includes("admin")) {
         navigate("/");
@@ -80,7 +78,8 @@ export default function Users() {
     return !users.some((user) => user.user_username === username);
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (e) => {
+    e.preventDefault();
     if (!validatePassword(password)) {
       setError(
         "Password must be 8-10 characters long and include alphabets, numbers, and special characters."
@@ -99,9 +98,9 @@ export default function Users() {
       const response = await axios.post("http://localhost:8000/users/create", {
         username,
         password,
-        email,
-        group,
-        status,
+        inputEmail: email,
+        inputGroup: selectedGroups,
+        enabled: status,
       });
 
       fetchUsers.then((data) => {
@@ -110,6 +109,29 @@ export default function Users() {
     } catch (error) {
       console.error("Error creating user:", error);
       setError("Failed to create user. Please try again.");
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleUpdate = async (user) => {
+    try {
+      const updatedUsers = users.map((u) =>
+        u.user_username === user.user_username ? user : u
+      );
+      setUsers(updatedUsers);
+
+      console.log("user", user);
+
+      await axios.post("http://localhost:8000/users/update", {
+        username: user.user_username,
+        password: user.user_password,
+        inputEmail: user.user_email,
+        inputGroup: user.groups,
+        enabled: user.user_enabled,
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      setError("Failed to update user. Please try again.");
       setOpenSnackbar(true);
     }
   };
@@ -159,7 +181,11 @@ export default function Users() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Select onChange={(e) => setGroup(e.target.value)} value={group} multiple>
+                  <Select
+                    onChange={(e) => setSelectedGroups(e.target.value)}
+                    value={selectedGroups}
+                    multiple
+                  >
                     {groups?.map((group, i) => (
                       <MenuItem key={i} value={group}>
                         {group}
@@ -174,7 +200,7 @@ export default function Users() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Button variant="contained" onClick={handleCreate}>
+                  <Button variant="contained" onClick={(e) => handleCreate(e)}>
                     Create
                   </Button>
                 </TableCell>
@@ -185,21 +211,63 @@ export default function Users() {
                 <TableRow key={i}>
                   <TableCell>{user.user_username}</TableCell>
                   <TableCell>
-                    <TextField label="New Password" variant="outlined" />{" "}
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <Select   >
-                    {groups?.map((group, i) => (
-                      <MenuItem key={i} value={group}>
-                        {group}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <TableCell>
-                    <Switch />
+                    <TextField
+                      label="New Password"
+                      variant="outlined"
+                      value=""
+                      onChange={(e) => {
+                        const updatedUsers = [...users];
+                        updatedUsers[i].user_password = e.target.value;
+                        setUsers(updatedUsers);
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
-                    <Button variant="contained">Update</Button>
+                    <TextField
+                      label="Email"
+                      variant="outlined"
+                      value={user.user_email || ""}
+                      onChange={(e) => {
+                        const updatedUsers = [...users];
+                        updatedUsers[i].email = e.target.value;
+                        setUsers(updatedUsers);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      multiple
+                      value={user.groups || []}
+                      onChange={(e) => {
+                        const updatedUsers = [...users];
+                        updatedUsers[i].groups = e.target.value;
+                        setUsers(updatedUsers);
+                      }}
+                    >
+                      {groups?.map((group, i) => (
+                        <MenuItem key={i} value={group}>
+                          {group}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={user.user_enabled}
+                      onChange={(e) => {
+                        const updatedUsers = [...users];
+                        updatedUsers[i].user_enabled = e.target.checked;
+                        setUsers(updatedUsers);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      onClick={() => handleUpdate(user)}
+                    >
+                      Update
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
