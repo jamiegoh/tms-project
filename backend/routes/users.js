@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { createUser, getUsers, updateUser, currentUser, updateSelf, getSpecificUserByUsername } = require('../controllers/usersController');
+const { createUser, getUsers, updateUser, currentUser, updateSelf, getSpecificUserByUsername} = require('../controllers/usersController');
 
 const db = require('../db');
 const { checkPermissions } = require("../middleware/permissions");

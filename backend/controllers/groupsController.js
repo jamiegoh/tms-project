@@ -48,7 +48,6 @@ const checkGroup = async (username, group) => {
             "SELECT user_group_groupName FROM user_group WHERE user_group_username = ?", [username]
         );
         const groupNames = groups.map(group => group.user_group_groupName);
-        console.log("groupNames", groupNames);
         return groups.some(g => g.user_group_groupName === group);
     } catch (err) {
         console.error("Error selecting data:", err);
@@ -56,4 +55,17 @@ const checkGroup = async (username, group) => {
     }
 };
 
-module.exports = {getGroupsByUser, getGroups, getGroupsForSpecificUser, checkGroup};
+const createGroup = async (req, res) => {
+    try { 
+        const groupName = req.body.groupName;
+        await db.execute("INSERT INTO user_group (user_group_username, user_group_groupName) VALUES ('', ?)", [groupName]);
+
+        res.json({ message: 'Group created successfully' });
+    }
+    catch (err) {
+        console.error("Error inserting data:", err);
+        res.status(500).json({ message: 'Error inserting data', error: err });
+    }
+};
+
+module.exports = {getGroupsByUser, getGroups, getGroupsForSpecificUser, checkGroup, createGroup};

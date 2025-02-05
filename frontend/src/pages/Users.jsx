@@ -14,12 +14,13 @@ import {
   Button,
   Snackbar,
   Alert,
+  Box
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import getUserPerms from "../utils/getUserPerms.js";
+import CreateGroup from "../components/CreateGroup";
 
 export default function Users() {
-
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [perms, setPerms] = useState([]);
@@ -34,7 +35,7 @@ export default function Users() {
 
   const [snackbarInfo, setSnackbarInfo] = useState({
     message: "",
-    severity: "error", 
+    severity: "error",
     open: false,
   });
 
@@ -73,10 +74,11 @@ export default function Users() {
       }
       setPerms(perms);
     });
-  }, []); 
+  }, []);
 
   const validatePassword = (password) => {
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,10}$/;
+    const regex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,10}$/;
     return regex.test(password);
   };
 
@@ -115,7 +117,6 @@ export default function Users() {
     }
 
     try {
-
       const newUser = {
         user_username: username,
         user_email: email,
@@ -150,7 +151,6 @@ export default function Users() {
 
   const handleUpdate = async (user, i) => {
     try {
-
       if (updatedUserPassword[i] && !validatePassword(updatedUserPassword[i])) {
         setSnackbarInfo({
           message:
@@ -196,12 +196,26 @@ export default function Users() {
     }));
   };
 
+  // should probably change these to a form .........
+
   return (
     <div>
       <Header />
       {perms.includes("admin") ? (
         <div>
-          <h1>Users</h1>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexDirection: "row",
+              alignItems: "center",
+              py: 2,
+              px: 4,
+            }}
+          >
+            <h1>Users</h1>
+            <CreateGroup />
+          </Box>
           <Table>
             <TableHead>
               <TableRow>
@@ -268,9 +282,11 @@ export default function Users() {
                     <TextField
                       label="New Password"
                       variant="outlined"
-                      value={updatedUserPassword[i]}
+                      value={updatedUserPassword[i] || ""}
                       onChange={(e) => {
-                        const updatedUserPasswordCopy = [...updatedUserPassword];
+                        const updatedUserPasswordCopy = [
+                          ...updatedUserPassword,
+                        ];
                         updatedUserPasswordCopy[i] = e.target.value;
                         setUpdatedUserPassword(updatedUserPasswordCopy);
                       }}

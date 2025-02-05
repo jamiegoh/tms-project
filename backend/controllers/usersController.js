@@ -88,12 +88,12 @@ const updateUser = async (req, res) => {
 
         const currUserProfile = getSpecificUser(username);
 
-        console.log("CURRUSERPROFILE" , currUserProfile);
 
         let password = inputPassword != currUserProfile.user_password ? inputPassword : null;
         let email = inputEmail != currUserProfile.user_email ? inputEmail : null;
         let group = inputGroup != currUserProfile.groups ? inputGroup : null;
         let status = enabled != currUserProfile.user_enabled ? enabled : null;
+
 
         if(!username){
             return res.status(400).json({message: 'Username is required'});
@@ -121,7 +121,7 @@ const updateUser = async (req, res) => {
             await db.execute("UPDATE users SET user_email = ? WHERE user_username = ?", [email, username]);
         }
 
-        if(status){
+        if(status !== null){
             await db.execute("UPDATE users SET user_enabled = ? WHERE user_username = ?", [status, username]);
         }
 
@@ -179,5 +179,6 @@ const updateSelf = async (req, res) => {
         res.status(500).json({ message: 'Error updating user', error: err });
     }
 };
+
 
 module.exports = {getUsers, createUser, updateUser, currentUser, updateSelf, getSpecificUserByUsername};

@@ -7,6 +7,7 @@ const Profile = () => {
   const [currUser, setCurrUser] = useState(null);
   const [inputPassword, setInputPassword] = useState("");
   const [inputEmail, setInputEmail] = useState("");
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -14,9 +15,6 @@ const Profile = () => {
   useEffect(() => {
     getCurrentUser().then((response) => {
       setCurrUser(response);
-      if (response.user_email) {
-        setInputEmail(response.user_email);
-      }
     });
   }, []);
 
@@ -76,7 +74,8 @@ const Profile = () => {
         <h2>Profile Page</h2>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 5, p: 2, width: "25%", margin: "auto" }}>
-        <h4>Username: {currUser.user_username}</h4>
+        <TextField label="Username" variant="outlined" value={currUser.user_username} disabled />
+        <TextField label="Email" variant="outlined" value={currUser.user_email} disabled />
         <TextField
           label="New Password"
           variant="outlined"
@@ -85,7 +84,7 @@ const Profile = () => {
           onChange={(e) => setInputPassword(e.target.value)}
         />
         <TextField
-          label="Email"
+          label="New Email"
           variant="outlined"
           value={inputEmail}
           onChange={(e) => setInputEmail(e.target.value)}

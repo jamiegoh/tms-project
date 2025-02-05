@@ -4,7 +4,6 @@ const db = require('../db'); // Import the database connection at the top
 exports.cookieAuthentication = async (req, res, next) => {
   const token = req.cookies.token;
 
-  // Check if the token exists
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
@@ -13,6 +12,8 @@ exports.cookieAuthentication = async (req, res, next) => {
     const user = jwt.verify(token, process.env.JWT_SECRET_KEY);
    
     const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [user.user.username]);
+
+    console.log(users);
 
     if (users.length === 0) {
       res.clearCookie('token'); 
@@ -24,7 +25,11 @@ exports.cookieAuthentication = async (req, res, next) => {
       return res.status(401).json({ message: 'Unauthorized: Session mismatch' });
     }
 
-   
+    if(users[0].user_enabled === 0){
+        res.clearCookie('token'); 
+        return res.status(401).json({ message: 'Unauthorized: User is disabled' });
+    }
+
     req.user = user;
     next();
     

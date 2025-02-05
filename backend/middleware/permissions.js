@@ -6,7 +6,6 @@ const { checkGroup } = require("../controllers/groupsController");
 
 exports.checkPermissions = async (req, res, next) => {
 
-    console.log("token: ", jwt.decode(req.cookies.token));
     const token = req.cookies.token;
 
     const user = jwt.decode(token).user.username;
