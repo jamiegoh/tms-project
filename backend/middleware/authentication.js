@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../db'); // Import the database connection at the top
 
 exports.cookieAuthentication = async (req, res, next) => {
+  console.log("in cookieAuthentication");
   const token = req.cookies.token;
 
   if (!token) {
@@ -26,6 +27,7 @@ exports.cookieAuthentication = async (req, res, next) => {
     }
 
     if(users[0].user_enabled === 0){
+      console.log("in users[0].user_enabled === 0");
         res.clearCookie('token'); 
         return res.status(401).json({ message: 'Unauthorized: User is disabled' });
     }

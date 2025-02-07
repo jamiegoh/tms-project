@@ -14,7 +14,9 @@ import {
   Button,
   Snackbar,
   Alert,
-  Box
+  Box,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import getUserPerms from "../utils/getUserPerms.js";
@@ -252,12 +254,15 @@ export default function Users() {
                   <Select
                     onChange={(e) => setSelectedGroups(e.target.value)}
                     value={selectedGroups}
+                    renderValue = {(selected) => selected.join(', ')} 
                     multiple
+                    sx={{ width: "200px" }}
                   >
                     {groups?.map((group, i) => (
                       <MenuItem key={i} value={group}>
-                        {group}
-                      </MenuItem>
+                      <Checkbox checked={selectedGroups?.includes(group)} />
+                      <ListItemText primary={group} />
+                    </MenuItem>
                     ))}
                   </Select>
                 </TableCell>
@@ -305,21 +310,24 @@ export default function Users() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Select
-                      multiple
-                      value={user.groups || []}
-                      onChange={(e) => {
-                        const updatedUsers = [...users];
-                        updatedUsers[i].groups = e.target.value;
-                        setUsers(updatedUsers);
-                      }}
-                    >
-                      {groups?.map((group, i) => (
-                        <MenuItem key={i} value={group}>
-                          {group}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                  <Select
+                    multiple
+                    value={user.groups || []}
+                    renderValue = {(selected) => selected.join(', ')} 
+                    sx={{ width: "200px" }}
+                    onChange={(e) => {
+                      const updatedUsers = [...users];
+                      updatedUsers[i].groups = e.target.value;
+                      setUsers(updatedUsers);
+                    }}
+                  >
+                    {groups?.map((group, i) => (
+                      <MenuItem key={i} value={group}>
+                        <Checkbox checked={user.groups?.includes(group)} />
+                        <ListItemText primary={group} />
+                      </MenuItem>
+                    ))}
+                  </Select>
                   </TableCell>
                   <TableCell>
                     <Switch

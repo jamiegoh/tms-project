@@ -34,7 +34,7 @@ const Profile = () => {
 
 
   const handleUpdate = async () => {
-    if (!isPasswordValid(inputPassword)) {
+    if (inputPassword && !isPasswordValid(inputPassword)) {
       setSnackbarSeverity("error");
       setSnackbarMessage("Password must be between 8-10 characters and contain letters, numbers, and special characters.");
       setSnackbarOpen(true);

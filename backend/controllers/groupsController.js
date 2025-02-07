@@ -58,6 +58,11 @@ const checkGroup = async (username, group) => {
 const createGroup = async (req, res) => {
     try { 
         const groupName = req.body.groupName;
+
+        if (!groupName.match(/^[a-zA-Z0-9_]{1,50}$/)) {
+            return res.status(400).json({ message: 'Group name should only contain alphanumeric characters and be 1-50 characters' });
+        }
+
         await db.execute("INSERT INTO user_group (user_group_username, user_group_groupName) VALUES ('', ?)", [groupName]);
 
         res.json({ message: 'Group created successfully' });
