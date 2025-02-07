@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const db = require('../db'); // Import the database connection at the top
 
 exports.cookieAuthentication = async (req, res, next) => {
-  console.log("in cookieAuthentication");
   const token = req.cookies.token;
 
   if (!token) {
@@ -14,7 +13,6 @@ exports.cookieAuthentication = async (req, res, next) => {
    
     const [users] = await db.execute("SELECT * FROM users WHERE user_username = ?", [user.user.username]);
 
-    console.log(users);
 
     if (users.length === 0) {
       res.clearCookie('token'); 

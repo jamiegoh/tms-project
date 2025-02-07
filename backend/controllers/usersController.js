@@ -135,7 +135,7 @@ const updateUser = async (req, res) => {
         }
 
         if (status !== null) {
-            if(currUserProfile.includes("HARDCODED_ADMIN")){
+            if(username === "admin" && status === false) {
                 return res.status(403).json({ message: 'Hardcoded Admin cannot be disabled' });
             }
             await connection.execute("UPDATE users SET user_enabled = ? WHERE user_username = ?", [status, username]);
@@ -149,8 +149,8 @@ const updateUser = async (req, res) => {
             const groupsToRemove = existingGroupNames.filter(g => !newGroupNames.includes(g));
             const groupsToAdd = newGroupNames.filter(g => !existingGroupNames.includes(g));
 
-            if (groupsToRemove.includes("HARDCODED_ADMIN") || groupsToAdd.includes("HARDCODED_ADMIN")) {
-                return res.status(403).json({ message: 'Hardcoded Admin cannot be removed/added' });
+            if (username === "admin" && groupsToRemove.includes("admin")) {
+                return res.status(403).json({ message: 'Hardcoded Admin cannot have admin rights revoked' });
             }
 
             for (let g of groupsToRemove) {
