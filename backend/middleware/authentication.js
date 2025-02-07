@@ -25,7 +25,6 @@ exports.cookieAuthentication = async (req, res, next) => {
     }
 
     if(users[0].user_enabled === 0){
-      console.log("in users[0].user_enabled === 0");
         res.clearCookie('token'); 
         return res.status(401).json({ message: 'Unauthorized: User is disabled' });
     }

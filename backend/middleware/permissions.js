@@ -10,11 +10,13 @@ exports.checkPermissions = async (req, res, next) => {
 
     const user = jwt.decode(token).user.username;
 
-    if(await checkGroup({user, group: "admin"})){
+
+    if(await checkGroup(user, "admin")){
         next();
     }
     else{
         res.status(403).json({ message: 'Forbidden' });
+
     }
 }
     

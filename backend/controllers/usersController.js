@@ -63,7 +63,7 @@ const createUser = async (req, res) => {
             return res.status(400).json({ message: 'Password must be 8-10 characters long, contain at least one lowercase letter, one number, and one special character' });
         }
 
-        if(email.length > 100){
+        if(email && email.length > 100){
             return res.status(400).json({ message: 'Email must be less than 100 characters' });
         }
 
@@ -116,6 +116,10 @@ const updateUser = async (req, res) => {
 
         if (password && (password.length < 8 || password.length > 10 || !password.match(/[a-z]/) || !password.match(/[!?@#$%^&*()./]/) || !password.match(/[0-9]/))) {
             return res.status(400).json({ message: 'Password must be 8-10 characters long, contain at least one lowercase letter, one number, and one special character' });
+        }
+
+        if(email && email.length > 100){
+            return res.status(400).json({ message: 'Email must be less than 100 characters' });
         }
 
         const [existingUsers] = await connection.execute("SELECT * FROM users WHERE user_username = ?", [username]);

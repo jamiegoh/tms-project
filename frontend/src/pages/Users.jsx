@@ -143,6 +143,11 @@ export default function Users() {
       });
     } catch (error) {
       console.error("Error creating user:", error);
+      
+      if(error.response.status === 403){
+        navigate("/home");
+      }
+
       setSnackbarInfo({
         message: "Failed to create user. Please try again.",
         severity: "error",
@@ -183,6 +188,11 @@ export default function Users() {
       });
     } catch (error) {
       console.error("Error updating user:", error);
+
+      if(error.response.status === 403){
+        navigate("/home");
+      }
+
       setSnackbarInfo({
         message: "Failed to update user. Please try again.",
         severity: "error",

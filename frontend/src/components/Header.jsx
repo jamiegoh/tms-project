@@ -58,7 +58,7 @@ const Header = () => {
       >
         <h1>Task Management System</h1>
 
-        {pathname != "/login" ? (
+        {pathname != "/" ? (
           <nav
             style={{ display: "flex", flex: 2, gap: 50, alignItems: "center" }}
           >
