@@ -6,7 +6,7 @@ import {
   RouterProvider,
   Routes,
 } from "react-router-dom";
-import Home from "./pages/Home";
+import Application from "./pages/Application";
 import Users from "./pages/Users";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -16,7 +16,7 @@ function App() {
   return (
     <Routes>
       <Route path="*" element={<Login />} />
-        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/home" element={<ProtectedRoute><Application /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
         <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     </Routes>
