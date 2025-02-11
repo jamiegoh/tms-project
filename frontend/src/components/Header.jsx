@@ -9,7 +9,7 @@ import axios from "axios";
 const Header = () => {
   const pathname = useLocation().pathname;
 
-  const [perms, setPerms] = useState([]);
+  const [perms, setPerms] = useState({});
   const [currUser, setCurrUser] = useState("");
 
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ const Header = () => {
           >
             <NavLink to="/home">Task Management</NavLink>
 
-            {perms.includes("admin") ? (
+            {perms?.groups?.includes("admin") || perms?.username === 'admin' ? (
               <NavLink to="/users">User Management</NavLink>
             ) : null}
           </nav>

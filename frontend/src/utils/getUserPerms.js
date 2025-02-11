@@ -2,8 +2,8 @@ import axios from "axios";
 
 const getUserPerms = async () => {
     try {
-        const groups = await axios.get(`/groups/getperms`);
-        return groups.data;
+        const response = await axios.get(`/groups/getperms`);
+        return response.data;
     } catch (err) {
         console.error("Error selecting data:", err);
         throw err;
