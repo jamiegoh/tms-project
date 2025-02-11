@@ -25,7 +25,7 @@ import CreateGroup from "../components/CreateGroup";
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [perms, setPerms] = useState([]);
+  const [perms, setPerms] = useState({});
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -70,11 +70,12 @@ export default function Users() {
       setGroups(data);
     });
 
-    getUserPerms().then((perms) => {
-      if (!perms.includes("admin")) {
+    getUserPerms().then((res) => {
+      if (!res.groups.includes("admin") && res.username !== "admin" ) {
         navigate("/home");
       }
-      setPerms(perms);
+      console.log(res);
+      setPerms(res);
     });
   }, []);
 
@@ -144,7 +145,7 @@ export default function Users() {
     } catch (error) {
       console.error("Error creating user:", error);
       
-      if(error.response.status === 403){
+      if(error.response.status === 403 && perms.username !== 'admin'){
         navigate("/home");
       }
 
@@ -189,7 +190,7 @@ export default function Users() {
     } catch (error) {
       console.error("Error updating user:", error);
 
-      if(error.response.status === 403){
+      if(error.response.status === 403 && perms.username !== 'admin'){
         navigate("/home");
       }
 
@@ -213,7 +214,7 @@ export default function Users() {
   return (
     <div>
       <Header />
-      {perms.includes("admin") ? (
+      {perms?.groups?.includes("admin") || perms?.username === 'admin' ? (
         <div>
           <Box
             sx={{
@@ -250,6 +251,7 @@ export default function Users() {
                   <TextField
                     label="Password"
                     variant="outlined"
+                    type="password"
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </TableCell>
@@ -297,6 +299,7 @@ export default function Users() {
                     <TextField
                       label="New Password"
                       variant="outlined"
+                      type="password"
                       value={updatedUserPassword[i] || ""}
                       onChange={(e) => {
                         const updatedUserPasswordCopy = [

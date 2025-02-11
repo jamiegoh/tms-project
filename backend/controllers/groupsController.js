@@ -34,7 +34,7 @@ const getGroupsForSpecificUser = async (req, res) => {
             "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
         );
         const response = groups.map(group => group.user_group_groupName);
-        res.json(response);
+        res.json({ groups: response, username: username });
     } catch (err) {
         console.error("Error selecting data:", err);
         res.status(500).json({ message: 'Error selecting data', error: err });
@@ -62,6 +62,11 @@ const createGroup = async (req, res) => {
 
         if (!groupName.match(/^[a-zA-Z0-9_]{1,50}$/)) {
             return res.status(400).json({ message: 'Group name should only contain alphanumeric characters and be 1-50 characters' });
+        }
+
+        const [groups] = await db.execute("SELECT user_group_groupName FROM user_group WHERE user_group_groupName = ?", [groupName]);
+        if (groups.length > 0) {
+            return res.status(400).json({ message: 'Group already exists' });
         }
 
         await db.execute("INSERT INTO user_group (user_group_username, user_group_groupName) VALUES ('', ?)", [groupName]);

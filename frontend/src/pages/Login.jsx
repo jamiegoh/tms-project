@@ -30,13 +30,10 @@ const Login = () => {
         navigate("/home");
       }
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response.status != 200) {
         setErrorMessage("Invalid username or password");
         setOpenAlert(true);
-      } else {
-        setErrorMessage("An error occurred. Please try again later.");
-        setOpenAlert(true);
-      }
+      } 
     }
   };
 
