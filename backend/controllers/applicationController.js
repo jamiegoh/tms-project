@@ -149,6 +149,9 @@ const checkAppPermit = async (username, state, appid) => {
     else if (state === "DONE"){
         state = "Done";
     }
+    else if (state === "CREATE"){
+        state = "Create";
+    }
 
     const query = `SELECT App_permit_${state} FROM Application WHERE App_Acronym = ?`;
     const [appPermits] = await db.execute(query, [appid]);
@@ -171,6 +174,9 @@ const checkAppPermit = async (username, state, appid) => {
         break;
     case "Done":
         appPermit = appPermits[0].App_permit_Done;
+        break;
+    case "Create":
+        appPermit = appPermits[0].App_permit_Create;
         break;
     default:
         return false;

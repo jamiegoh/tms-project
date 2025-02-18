@@ -1,4 +1,5 @@
-const db = require('../db');
+const db = require("../db");
+const { checkAppPermit } = require("./applicationController");
 
 const getTasks = async (req, res) => {
     try {
@@ -56,7 +57,14 @@ const getDetailedTask = async (req, res) => {
 const createTask = async (req, res) => {
     const connection = await db.getConnection(); 
     try {
-        await connection.beginTransaction();  
+        await connection.beginTransaction();
+        
+        const user = req.user.user.username;
+
+        if (await checkAppPermit(user, "CREATE", req.params.appid) === false) {
+            await connection.rollback();
+            return res.status(403).json({ message: 'Forbidden' });
+        }
 
         const task_app_acronym = req.params.appid;
 
@@ -146,5 +154,4 @@ const updateTask = async (req, res) => {
 }
 
 
-
-module.exports = { getTasks, getDetailedTask, createTask, updateTask };
+module.exports =  { getTasks, createTask, updateTask, getDetailedTask };
