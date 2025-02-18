@@ -134,5 +134,67 @@ const getAppPermits = async (req, res) => {
     }
 }
 
+const checkAppPermit = async (username, state, appid) => {
+   try {
 
-module.exports = { getApplications, createApplication, updateApplication, getAppPermits };
+    if (state === "OPEN"){
+        state = "Open";
+    }
+    else if (state === "TODO"){
+        state = "toDoList";
+    }
+    else if (state === "DOING"){
+        state = "Doing";
+    }
+    else if (state === "DONE"){
+        state = "Done";
+    }
+
+    const query = `SELECT App_permit_${state} FROM Application WHERE App_Acronym = ?`;
+    const [appPermits] = await db.execute(query, [appid]);
+
+    if (appPermits.length === 0) {
+        return false;
+    }
+
+    let appPermit = "";
+
+    switch(state) {
+    case "Open":
+        appPermit = appPermits[0].App_permit_Open;
+        break;
+    case "toDoList":
+        appPermit = appPermits[0].App_permit_toDoList;
+        break;
+    case "Doing":
+        appPermit = appPermits[0].App_permit_Doing;
+        break;
+    case "Done":
+        appPermit = appPermits[0].App_permit_Done;
+        break;
+    default:
+        return false;
+    }
+    
+    const [groups] = await db.execute(
+        "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
+    );
+
+    const userGroups = groups.map(group => group.user_group_groupName);
+
+    if (!userGroups.includes(appPermit)) {
+        return false;
+    }
+
+    return true;
+
+
+   }
+    catch (err) {
+     console.error("Error getting application permits:", err);
+     throw err;
+};
+}
+
+
+module.exports = { getApplications, createApplication, updateApplication, getAppPermits, checkAppPermit };
