@@ -97,12 +97,12 @@ const updateApplication = async (req, res) => {
 
 const getAppPermits = async (req, res) => {
     try {
-        const {app_id} = req.params;
+        const {appid} = req.params;
         const username = req.user.user.username;
 
 
         const [appPermits] = await db.execute(
-            "SELECT App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done FROM Application WHERE App_Acronym = ?", [app_id]
+            "SELECT App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done FROM Application WHERE App_Acronym = ?", [appid]
         );
 
         if (appPermits.length === 0) {

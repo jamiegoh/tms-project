@@ -4,18 +4,21 @@ import { Container, TextField, Button, Select, MenuItem, Typography, Box, Paper 
 import { useParams, useNavigate } from "react-router-dom";
 import ButtonCombinations from "../components/ButtonCombinations";
 
-const DetailedTask = ({type}) => {
+const DetailedTask = () => {
   const [taskName, setTaskName] = useState("");
   const [plans, setPlans] = useState([]);
   const [plan, setPlan] = useState("");
   const [description, setDescription] = useState("");
   const [taskState, setTaskState] = useState("");
+  const [permits, setPermits] = useState({});
 
   const [newNote, setNewNote] = useState("");
 
   const [notes, setNotes] = useState([]);
 
     const id = useParams().id;
+    const app_id = id.split('_')[0];
+
     useEffect(() => {
       axios.get(`/tasks/get/details/${id}`).then((response) => {
         const task = response.data;
@@ -25,13 +28,21 @@ const DetailedTask = ({type}) => {
         setNotes(JSON.parse(task.Task_notes));
 
         setTaskState(task.Task_state);
+        console.log(task.Task_state);
 
-        const app_id = id.split('_')[0];
+        
 
         axios.get(`/plans/get/${app_id}`).then((response) => {
           setPlans(response.data);
         });
+        
       });
+
+      axios.get(`/application/get/permissions/${app_id}`).then((response) => {
+        const permits = response.data;
+        setPermits(permits);
+    });
+
     }, [id]);
   
   const navigate = useNavigate();
@@ -44,6 +55,21 @@ const DetailedTask = ({type}) => {
     });
   }
 
+  const convertState = (state) => {
+    switch(state) {
+      case 'OPEN':
+        return 'Open';
+      case 'TODO':
+        return 'toDoList';
+      case 'DOING':
+        return 'Doing';
+      case 'DONE':
+        return 'Done';
+      default:
+        return '';
+    }
+  }
+
   return (
     <Container sx={{ marginTop: 4 }}>
       <Button variant="text" sx={{ marginBottom: 2 }} onClick={() => navigate(-1)}>{"< Back"}</Button>
@@ -54,7 +80,7 @@ const DetailedTask = ({type}) => {
             fullWidth
             label="Task Name"
             value={taskName}
-            disabled = {type === 'update' ? true : false}
+            disabled
             onChange={(e) => setTaskName(e.target.value)}
 
           />
@@ -64,7 +90,7 @@ const DetailedTask = ({type}) => {
         </Box>
         </Box>
         <Box >
-        <Select sx={{width: '30vw'}} value={plan} onChange={(e) => setPlan(e.target.value)} displayEmpty>
+        <Select sx={{width: '30vw'}} value={plan} onChange={(e) => setPlan(e.target.value)} displayEmpty disabled={!permits[`App_permit_${convertState(taskState)}`]}>
           <MenuItem value="">Select Plan</MenuItem>
           {plans?.map((plan, index) => (
             <MenuItem key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</MenuItem>
@@ -96,6 +122,7 @@ const DetailedTask = ({type}) => {
             ))}
           </Box>
           <textarea
+            disabled={!permits[`App_permit_${convertState(taskState)}`]}
             placeholder="Add a note..."
             value={newNote}
             style={{ resize: "vertical", width: "100%", height: "20%" }} 
@@ -105,7 +132,7 @@ const DetailedTask = ({type}) => {
         </Box>
       </Box>
     <Box sx={{display: 'flex', justifyContent: 'flex-end' }}>
-       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} />
+       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} />
     </Box>
     </Container>
   );

@@ -4,22 +4,10 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 
-const ButtonCombinations = ({taskState, handleUpdateTask}) => {
+const ButtonCombinations = ({taskState, handleUpdateTask, permits}) => {
 
     const task_id = useParams().id;
     const app_id = task_id.split('_')[0];
-
-    const [permits, setPermits] = useState({});
-
-    useEffect(() => {
-        axios.get(`/application/get/permissions/${app_id}`).then((response) => {
-            const permits = response.data;
-            setPermits(permits);
-        }
-        );
-    }, [taskState]);
-
-    console.log("TASK STATE: ", taskState);
 
     const handleReleaseTask = () => {
         alert("Task Released!");
@@ -50,9 +38,6 @@ const ButtonCombinations = ({taskState, handleUpdateTask}) => {
         <Button onClick={handleUpdateTask} variant="contained" sx={{ marginTop: 2, }}>Save Changes</Button>
         </Box>
         )
-  }
-  else if (taskState == 'CLOSED') {
-    return null;
   }
   else if (taskState == 'TODO' && permits.App_permit_toDoList) {
     return (
