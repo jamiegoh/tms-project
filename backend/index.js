@@ -22,6 +22,7 @@ const groupRoutes = require('./routes/groups');
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const applicationRoutes = require('./routes/application');
+const planRoutes = require('./routes/plans');
 
 
 
@@ -30,6 +31,7 @@ app.use('/groups', cookieAuthentication, groupRoutes);
 app.use('/auth', authRoutes);
 app.use('/tasks', cookieAuthentication, taskRoutes);
 app.use('/application', cookieAuthentication, applicationRoutes);
+app.use('/plans', cookieAuthentication, planRoutes);
   
   app.listen(8000, () => {
     console.log("Server started on port 8000");

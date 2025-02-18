@@ -42,7 +42,7 @@ const Profile = () => {
     }
 
     try {
-      await axios.post("/users/updateSelf", {
+      await axios.put("/users/updateSelf", {
         inputPassword,
         inputEmail,
       });

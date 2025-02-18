@@ -3,6 +3,23 @@ const db = require('../db');
 const getApplications = async (req, res) => {
     try {
         const [applications] = await db.execute("SELECT * FROM Application");
+
+        //im sure theres a simpler way
+        applications.forEach(application => {
+
+        const startDate = new Date(application.App_startDate);
+        const endDate = new Date(application.App_endDate);
+
+        const startDateOffset = startDate.getTimezoneOffset();
+        const endDateOffset = endDate.getTimezoneOffset();
+
+        startDate.setMinutes(startDate.getMinutes() - startDateOffset);
+        endDate.setMinutes(endDate.getMinutes() - endDateOffset);
+
+        application.App_startDate = startDate.toISOString().split('T')[0];
+        application.App_endDate = endDate.toISOString().split('T')[0];
+        });
+
         res.json(applications);
     } catch (err) {
         console.error("Error getting applications:", err);
@@ -15,15 +32,16 @@ const createApplication = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { app_acronym, app_description, app_rNumber, app_startDate, 
-            app_endDate, app_permit_Create, app_permit_Open, app_permit_toDoList,
-             app_permit_Doing, app_permit_Done} = req.body;
+        const { App_acronym, App_description, App_rNumber, App_startDate, 
+            App_endDate, App_permit_Create, App_permit_Open, App_permit_toDoList,
+             App_permit_Doing, App_permit_Done} = req.body;
 
-             if(app_acronym === undefined || app_description === undefined || app_rNumber === undefined){
+             if(App_acronym === undefined || App_description === undefined || App_rNumber === undefined){
                 return res.status(400).json({ message: 'Application acronym, description and RNumber are required' });
              }
+             
 
-        await connection.execute("INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_StartDate, App_EndDate, App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)", [app_acronym, app_description, app_rNumber, app_startDate, app_endDate, app_permit_Create, app_permit_Open, app_permit_toDoList, app_permit_Doing, app_permit_Done]);
+        await connection.execute("INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_StartDate, App_EndDate, App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)", [App_acronym, App_description, App_rNumber, App_startDate, App_endDate, App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done]);
 
         await connection.commit();
 
@@ -40,5 +58,81 @@ const createApplication = async (req, res) => {
     }
 };
 
+const updateApplication = async (req, res) => {
+    const connection = await db.getConnection();
 
-module.exports = { getApplications, createApplication };
+    try {
+        await connection.beginTransaction();
+
+        const { App_acronym, App_description, App_rNumber, App_permit_Create, App_permit_Open, App_permit_toDoList,
+             App_permit_Doing, App_permit_Done} = req.body;
+
+        let { App_startDate, App_endDate } = req.body;
+
+        const startDate = new Date(App_startDate);
+        const endDate = new Date(App_endDate);
+
+        const startDateOffset = startDate.getTimezoneOffset();
+        const endDateOffset = endDate.getTimezoneOffset();
+
+        startDate.setMinutes(startDate.getMinutes() - startDateOffset);
+        endDate.setMinutes(endDate.getMinutes() - endDateOffset);
+
+        App_startDate = startDate.toISOString().split('T')[0];
+        App_endDate = endDate.toISOString().split('T')[0];
+             
+        await connection.execute("UPDATE Application SET App_Description = ?, App_Rnumber = ?, App_StartDate = ?, App_EndDate = ?, App_permit_create = ?, App_permit_open = ?, App_permit_toDoList = ?, App_permit_doing = ?, App_permit_done = ? WHERE App_Acronym = ?", [App_description, App_rNumber, App_startDate, App_endDate, App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_acronym]);
+
+        await connection.commit();
+
+        res.json({ message: 'Application updated' });
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error updating application:", err);
+        res.status(500).json({ message: 'Error updating application', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const getAppPermits = async (req, res) => {
+    try {
+        const {app_id} = req.params;
+        const username = req.user.user.username;
+
+
+        const [appPermits] = await db.execute(
+            "SELECT App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done FROM Application WHERE App_Acronym = ?", [app_id]
+        );
+
+        if (appPermits.length === 0) {
+            return res.status(404).json({ message: 'Application not found' });
+        }
+
+        //get groups for user
+        const [groups] = await db.execute(
+            "SELECT user_group_groupName FROM User_Group WHERE user_group_username = ?", [username]
+        );
+
+        const userGroups = groups.map(group => group.user_group_groupName);
+
+        const appPermit = appPermits[0];
+        const appPermitKeys = Object.keys(appPermit);
+
+        for (let i = 0; i < appPermitKeys.length; i++) {
+            if (!userGroups.includes(appPermit[appPermitKeys[i]])) {
+                appPermit[appPermitKeys[i]] = false;
+            } else {
+                appPermit[appPermitKeys[i]] = true;
+            }
+        }
+        
+        res.json(appPermit);
+    } catch (err) {
+        console.error("Error getting application permits:", err);
+        res.status(500).json({ message: 'Error getting application permits', error: err });
+    }
+}
+
+
+module.exports = { getApplications, createApplication, updateApplication, getAppPermits };

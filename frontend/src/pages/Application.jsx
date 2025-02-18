@@ -13,6 +13,7 @@ import {
   Button,
   Snackbar,
   Alert,
+  Link,
 } from "@mui/material";
 
 const Application = () => {
@@ -61,16 +62,16 @@ const Application = () => {
     e.preventDefault();
     try {
       const newApplication = {
-        app_acronym: newAppAcronym,
-        app_description: newAppDescription,
-        app_rNumber: newAppRNumber,
-        app_startDate: newAppStartDate,
-        app_endDate: newAppEndDate,
-        app_permit_Create: newAppPermits.create,
-        app_permit_Open: newAppPermits.open,
-        app_permit_toDoList: newAppPermits.toDoList,
-        app_permit_Doing: newAppPermits.doing,
-        app_permit_Done: newAppPermits.done,
+        App_acronym: newAppAcronym,
+        App_description: newAppDescription,
+        App_rNumber: newAppRNumber,
+        App_startDate: newAppStartDate,
+        App_endDate: newAppEndDate,
+        App_permit_Create: newAppPermits.create,
+        App_permit_Open: newAppPermits.open,
+        App_permit_toDoList: newAppPermits.toDoList,
+        App_permit_Doing: newAppPermits.doing,
+        App_permit_Done: newAppPermits.done,
       };
 
       await axios.post("/application/create", newApplication);
@@ -95,7 +96,7 @@ const Application = () => {
     const appToUpdate = application[index];
 
     try {
-      await axios.post("/application/update", appToUpdate);
+      await axios.put("/application/update", appToUpdate);
 
       setSnackbarInfo({
         message: "Application updated successfully.",
@@ -166,6 +167,7 @@ const Application = () => {
                 type="date"
                 variant="outlined"
                 onChange={(e) => setNewAppStartDate(e.target.value)}
+                value = {newAppStartDate}
               />
             </TableCell>
             <TableCell>
@@ -173,9 +175,10 @@ const Application = () => {
                 type="date"
                 variant="outlined"
                 onChange={(e) => setNewAppEndDate(e.target.value)}
+                value = {newAppEndDate}
               />
             </TableCell>
-            {/* Single select dropdowns for each app_permit field */}
+            {/* Single select dropdowns for each App_permit field */}
             <TableCell>
               <Select
                 value={newAppPermits.create || ""}
@@ -262,34 +265,33 @@ const Application = () => {
           {application.map((row, index) => (
             <TableRow key={index}>
               <TableCell>
-                <TextField
-                  value={row.app_acronym || ""}
-                  disabled
-                />
+                <Link href={`/tasks/${row.App_acronym}`}>
+                  {row.App_acronym || ""}
+                </Link>
               </TableCell>
               <TableCell>
                 <TextField
-                  value={row.app_description || ""}
+                  value={row.App_description || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_description = e.target.value;
+                    updatedApp[index].App_description = e.target.value;
                     setApplication(updatedApp);
                   }}
                 />
               </TableCell>
               <TableCell>
                 <TextField
-                  value={row.app_rNumber || ""}
+                  value={row.App_rNumber || ""}
                   disabled
                 />
               </TableCell>
               <TableCell>
                 <TextField
                   type="date"
-                  value={row.app_startDate || ""}
+                  value={row.App_startDate?.split('T')[0] || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_startDate = e.target.value;
+                    updatedApp[index].App_startDate = e.target.value;
                     setApplication(updatedApp);
                   }}
                 />
@@ -297,21 +299,21 @@ const Application = () => {
               <TableCell>
                 <TextField
                   type="date"
-                  value={row.app_endDate || ""}
+                  value={row.App_endDate?.split('T')[0] || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_endDate = e.target.value;
+                    updatedApp[index].App_endDate = e.target.value;
                     setApplication(updatedApp);
                   }}
                 />
               </TableCell>
-              {/* Single select dropdowns for app_permit fields */}
+              {/* Single select dropdowns for App_permit fields */}
               <TableCell>
                 <Select
-                  value={row.app_permit_Create || ""}
+                  value={row.App_permit_Create || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_permit_Create = e.target.value;
+                    updatedApp[index].App_permit_Create = e.target.value;
                     setApplication(updatedApp);
                   }}
                 >
@@ -327,10 +329,10 @@ const Application = () => {
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.app_permit_Open || ""}
+                  value={row.App_permit_Open || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_permit_Open = e.target.value;
+                    updatedApp[index].App_permit_Open = e.target.value;
                     setApplication(updatedApp);
                   }}
                 >
@@ -346,10 +348,10 @@ const Application = () => {
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.app_permit_toDoList || ""}
+                  value={row.App_permit_toDoList || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_permit_toDoList = e.target.value;
+                    updatedApp[index].App_permit_toDoList = e.target.value;
                     setApplication(updatedApp);
                   }}
                 >
@@ -365,10 +367,10 @@ const Application = () => {
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.app_permit_Doing || ""}
+                  value={row.App_permit_Doing || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_permit_Doing = e.target.value;
+                    updatedApp[index].App_permit_Doing = e.target.value;
                     setApplication(updatedApp);
                   }}
                 >
@@ -384,10 +386,10 @@ const Application = () => {
               </TableCell>
               <TableCell>
                 <Select
-                  value={row.app_permit_Done || ""}
+                  value={row.App_permit_Done || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
-                    updatedApp[index].app_permit_Done = e.target.value;
+                    updatedApp[index].App_permit_Done = e.target.value;
                     setApplication(updatedApp);
                   }}
                 >
