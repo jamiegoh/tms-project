@@ -1,4 +1,5 @@
 const db = require("../db");
+const mail = require("../util/emailService");
 const { checkAppPermit } = require("./applicationController");
 
 const getTasks = async (req, res) => {
@@ -169,6 +170,7 @@ const updatePlan = async (req, res) => {
         if (task.length === 0) {
             await connection.rollback();
             return res.status(400).json({ message: 'Task not found' });
+        
         }
 
         if(task[0].Task_state !== 'DONE' && task[0].Task_state !== 'OPEN'){
@@ -176,6 +178,7 @@ const updatePlan = async (req, res) => {
             await connection.rollback();
             return res.status(400).json({ message: 'Task state must be DONE or OPEN' });
         }   
+
 
         const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
 
@@ -360,8 +363,7 @@ const seekApproval = async (req, res) => {
         const notes = [note, ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
-        //email trigger to DONE permit group here
-        console.log("TRIGGERING EMAIL");
+        await mail({ app_acronym: task[0].Task_app_Acronym, type: "done" });
 
 
         await connection.commit();
@@ -404,7 +406,7 @@ const reqForExtension = async (req, res) => {
         const notes = [note, ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
-        //email trigger to done group where email says task is sent for extension
+        await mail({ app_acronym: task[0].Task_app_Acronym, type: "extension" });
         await connection.commit();
 
         res.json({ message: 'Task sent for extension' });
@@ -445,7 +447,6 @@ const approveTask = async (req, res) => {
         const notes = [note, ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'CLOSED', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
-        //email trigger to task owner that task is approved
         await connection.commit();
 
         res.json({ message: 'Task approved' });
