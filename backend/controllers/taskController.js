@@ -227,6 +227,11 @@ const releaseTask = async (req, res) => {
             return res.status(400).json({ message: 'Task not found' });
         }
 
+        if(task[0].Task_state !== 'OPEN'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be OPEN' });
+        }
+
         const note = {
             text: 'OPEN >> TODO (Task Released)',
             user: req.user.user.username,
@@ -267,6 +272,11 @@ const workOnTask = async (req, res) => {
         if (task.length === 0) {
             await connection.rollback();
             return res.status(400).json({ message: 'Task not found' });
+        }
+
+        if(task[0].Task_state !== 'TODO'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be TODO' });
         }
 
         const note = {
@@ -310,6 +320,11 @@ const returnTaskToToDo = async (req, res) => {
             return res.status(400).json({ message: 'Task not found' });
         }
 
+        if(task[0].Task_state !== 'DOING'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DOING' });
+        }
+
         const note = {
             text: 'DOING >> TODO (Returned to ToDo)',
             user: req.user.user.username,
@@ -349,6 +364,11 @@ const seekApproval = async (req, res) => {
         if (task.length === 0) {
             await connection.rollback();
             return res.status(400).json({ message: 'Task not found' });
+        }
+
+        if(task[0].Task_state !== 'DOING'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DOING' });
         }
 
         const note = {
@@ -394,6 +414,11 @@ const reqForExtension = async (req, res) => {
             return res.status(400).json({ message: 'Task not found' });
         }
 
+        if(task[0].Task_state !== 'DOING'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DOING' });
+        }
+
         const note = {
             text: 'DOING >> DONE (Deadline Extension Requested)',
             user: req.user.user.username,
@@ -435,6 +460,11 @@ const approveTask = async (req, res) => {
             return res.status(400).json({ message: 'Task not found' });
         }
 
+        if(task[0].Task_state !== 'DONE'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DONE' });
+        }
+
         const note = {
             text: 'DONE >> CLOSED (Task Approved)',
             user: req.user.user.username,
@@ -473,6 +503,11 @@ const rejectTask = async (req, res) => {
         if (task.length === 0) {
             await connection.rollback();
             return res.status(400).json({ message: 'Task not found' });
+        }
+
+        if(task[0].Task_state !== 'DONE'){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DONE' });
         }
 
         const note = {

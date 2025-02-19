@@ -13,7 +13,12 @@ const CreatePlan = () => {
 
   const handleCreate = () => {
     const payload = { plan_name: planName, start_date: startDate, end_date: endDate };
+
+    try{
     axios.post(`/plans/${appid}/create`, payload);
+    } catch (error) {
+      console.error("Error creating plan", error);
+    }
 
   };
 

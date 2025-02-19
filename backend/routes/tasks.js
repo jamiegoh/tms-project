@@ -6,7 +6,7 @@ const { checkAppPermit } = require('../middleware/permissions');
 
 router.get("/get/:appid", getTasks);
 router.get("/get/details/:id", getDetailedTask);
-router.post("/:appid/create", createTask);
+router.post("/:appid/create", checkAppPermit, createTask);
 router.put("/update/notes/:id", checkAppPermit, updateNotes);
 router.put("/update/plan/:id", checkAppPermit, updatePlan);
 
