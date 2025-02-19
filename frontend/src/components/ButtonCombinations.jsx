@@ -5,10 +5,8 @@ import axios from "axios";
 
 const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
   const task_id = useParams().id;
-  const app_id = task_id.split("_")[0];
   const navigate = useNavigate();
 
-  // Snackbar State
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   const showSnackbar = (message, severity = "success") => {
@@ -21,6 +19,7 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
 
   const handleAction = async (url, successMessage) => {
     try {
+      await handleUpdateTask();
       await axios.post(url);
       showSnackbar(successMessage);
       setTimeout(() => navigate(-1), 1000);

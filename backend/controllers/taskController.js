@@ -107,14 +107,62 @@ const createTask = async (req, res) => {
 };
 
 
-const updateTask = async (req, res) => {
+const updateNotes = async (req, res) => {
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
 
         const task_id = req.params.id;
-        const { task_notes, task_plan } = req.body;
+        const { task_notes } = req.body;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+        
+        
+    
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : []; 
+
+            const notes = task_notes 
+              ? [{
+                text: task_notes,
+                user: req.user.user.username,
+                date_posted: new Date(),
+                type: 'comment',
+                currState: task[0].Task_state,
+            }
+    , ...parsedNotes] 
+              : parsedNotes;   
+
+
+        await connection.execute("UPDATE Task SET Task_notes = ? WHERE Task_id = ?", [notes, task_id]);
+
+        await connection.commit();
+
+        res.json({ message: 'Task updated' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error updating task:", err);
+        res.status(500).json({ message: 'Error updating task', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const updatePlan = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+        const { task_plan } = req.body;
 
         const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
 
@@ -123,23 +171,31 @@ const updateTask = async (req, res) => {
             return res.status(400).json({ message: 'Task not found' });
         }
 
-    
-        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : []; 
+        if(task[0].Task_state !== 'DONE' && task[0].Task_state !== 'OPEN'){
+            console.log("Task state is not DONE or OPEN" + task[0].Task_state);
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task state must be DONE or OPEN' });
+        }   
 
-        const notes = task_notes 
-          ? [{
-            text: task_notes,
-            user: req.user.user.username,
-            date_posted: new Date(),
-            type: 'comment'
-        }
-, ...parsedNotes] 
-          : parsedNotes;        
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
 
-        const plan = task_plan ? task_plan : task[0].Task_plan;
+                      
+        if(task[0].Task_plan !== task_plan){
+                
+            const planNote = {
+                text: 'Plan changed from ' + task[0].Task_plan + ' to ' + task_plan,
+                user: req.user.user.username,
+                date_posted: new Date(),
+                type: 'system',
+                currState: task[0].Task_state,
+              }
 
-        await connection.execute("UPDATE Task SET Task_notes = ?, Task_plan = ? WHERE Task_id = ?", [notes, plan, task_id]);
+                parsedNotes.unshift(planNote);
+          }
 
+
+
+        await connection.execute("UPDATE Task SET Task_plan = ?, Task_notes = ? WHERE Task_id = ?", [task_plan, JSON.stringify(parsedNotes), task_id]);
         await connection.commit();
 
         res.json({ message: 'Task updated' });
@@ -445,4 +501,4 @@ const rejectTask = async (req, res) => {
 
 
 
-module.exports =  { getTasks, createTask, updateTask, getDetailedTask, releaseTask, workOnTask, returnTaskToToDo, seekApproval, reqForExtension, approveTask, rejectTask };
+module.exports =  { getTasks, createTask, updateNotes, updatePlan, getDetailedTask, releaseTask, workOnTask, returnTaskToToDo, seekApproval, reqForExtension, approveTask, rejectTask };

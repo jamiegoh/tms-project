@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Container, TextField, Button, Select, MenuItem, Typography, Box, Paper } from "@mui/material";
+import { Container, TextField, Button, Select, MenuItem, Typography, Box, Paper, Snackbar, Alert } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import ButtonCombinations from "../components/ButtonCombinations";
 
@@ -15,6 +15,7 @@ const DetailedTask = () => {
   const [newNote, setNewNote] = useState("");
 
   const [notes, setNotes] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
     const id = useParams().id;
     const app_id = id.split('_')[0];
@@ -46,14 +47,29 @@ const DetailedTask = () => {
     }, [id]);
   
   const navigate = useNavigate();
+  
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
-  const handleUpdateTask = () => {
-    const payload = { task_plan: plan, task_notes: newNote };
-    axios.put(`/tasks/update/${id}`, payload).then(() => {
-      alert("Task updated successfully!");
-    });
-  }
+  const handleUpdateTask = async () => {
+    try {
+      await axios.put(`/tasks/update/notes/${id}`, {task_notes: newNote});
+
+      if(plan && (taskState === 'OPEN' || taskState === "DONE")) {
+        await axios.put(`/tasks/update/plan/${id}`, {task_plan: plan});
+      }
+
+      showSnackbar("Task updated successfully!");
+    } catch (error) {
+      console.error(error);
+      showSnackbar("Failed to update task", "error");
+    }
+  };
 
   const convertState = (state) => {
     switch(state) {
@@ -90,7 +106,8 @@ const DetailedTask = () => {
         </Box>
         </Box>
         <Box >
-        <Select sx={{width: '30vw'}} value={plan} onChange={(e) => setPlan(e.target.value)} displayEmpty disabled={!permits[`App_permit_${convertState(taskState)}`]}>
+        <Select sx={{width: '30vw'}} value={plan} onChange={(e) => setPlan(e.target.value)} displayEmpty disabled={!permits[`App_permit_${convertState(taskState)}`] || !(taskState === 'OPEN' || taskState === 'DONE')}
+        >
           <MenuItem value="">Select Plan</MenuItem>
           {plans?.map((plan, index) => (
             <MenuItem key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</MenuItem>
@@ -134,6 +151,9 @@ const DetailedTask = () => {
     <Box sx={{display: 'flex', justifyContent: 'flex-end' }}>
        <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} />
     </Box>
+    <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
     </Box>
   );
 };

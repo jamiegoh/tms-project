@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-const { getTasks, createTask, updateTask, getDetailedTask, releaseTask, workOnTask, returnTaskToToDo, approveTask, reqForExtension, rejectTask, seekApproval, } = require('../controllers/taskController');
+const { getTasks, createTask, updateTask, getDetailedTask, releaseTask, workOnTask, returnTaskToToDo, approveTask, reqForExtension, rejectTask, seekApproval, updateNotes, updatePlan, } = require('../controllers/taskController');
 const { checkAppPermit } = require('../middleware/permissions');
 
 router.get("/get/:appid", getTasks);
 router.get("/get/details/:id", getDetailedTask);
 router.post("/:appid/create", createTask);
-router.put("/update/:id", checkAppPermit, updateTask);
+router.put("/update/notes/:id", checkAppPermit, updateNotes);
+router.put("/update/plan/:id", checkAppPermit, updatePlan);
+
 
 router.post("/release/:id", checkAppPermit, releaseTask);
 router.post("/workon/:id", checkAppPermit, workOnTask);
