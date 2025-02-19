@@ -71,7 +71,7 @@ const DetailedTask = () => {
   }
 
   return (
-    <Container sx={{ marginTop: 4 }}>
+    <Box sx={{ marginTop: 4, mx: 20 }}>
       <Button variant="text" sx={{ marginBottom: 2 }} onClick={() => navigate(-1)}>{"< Back"}</Button>
       <Box sx={{display:'flex', flexDirection: 'column', gap: 4}}>
         <Box sx={{ display: "flex", flexDirection: "row", gap:16, justifyContent: 'space-between', alignItems:'center' }}>
@@ -134,7 +134,7 @@ const DetailedTask = () => {
     <Box sx={{display: 'flex', justifyContent: 'flex-end' }}>
        <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} />
     </Box>
-    </Container>
+    </Box>
   );
 };
 

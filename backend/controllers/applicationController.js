@@ -4,20 +4,27 @@ const getApplications = async (req, res) => {
     try {
         const [applications] = await db.execute("SELECT * FROM Application");
 
-        //im sure theres a simpler way
         applications.forEach(application => {
 
-        const startDate = new Date(application.App_startDate);
-        const endDate = new Date(application.App_endDate);
+            if(application.App_startDate === null) {
+                return;
+            }
+            else {
+                const startDate = new Date(application.App_startDate);
+                const startDateOffset = startDate.getTimezoneOffset();
+                startDate.setMinutes(startDate.getMinutes() - startDateOffset);
+                application.App_startDate = startDate.toISOString().split('T')[0];
+            }
 
-        const startDateOffset = startDate.getTimezoneOffset();
-        const endDateOffset = endDate.getTimezoneOffset();
-
-        startDate.setMinutes(startDate.getMinutes() - startDateOffset);
-        endDate.setMinutes(endDate.getMinutes() - endDateOffset);
-
-        application.App_startDate = startDate.toISOString().split('T')[0];
-        application.App_endDate = endDate.toISOString().split('T')[0];
+            if(application.App_endDate === null) {
+                return;
+            }
+            else {
+                const endDate = new Date(application.App_endDate);
+                const endDateOffset = endDate.getTimezoneOffset();
+                endDate.setMinutes(endDate.getMinutes() - endDateOffset);
+                application.App_endDate = endDate.toISOString().split('T')[0];
+            }
         });
 
         res.json(applications);
@@ -32,16 +39,21 @@ const createApplication = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { App_acronym, App_description, App_rNumber, App_startDate, 
-            App_endDate, App_permit_Create, App_permit_Open, App_permit_toDoList,
+        const { App_acronym, App_description, App_rNumber 
+            , App_permit_Create, App_permit_Open, App_permit_toDoList,
              App_permit_Doing, App_permit_Done} = req.body;
+
+        let { App_startDate, App_endDate } = req.body;
 
              if(App_acronym === undefined || App_description === undefined || App_rNumber === undefined){
                 return res.status(400).json({ message: 'Application acronym, description and RNumber are required' });
              }
              
+        const startDate = App_startDate === '' ? null : new Date(App_startDate);
+        const endDate = App_endDate === '' ? null : new Date(App_endDate);
 
-        await connection.execute("INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_StartDate, App_EndDate, App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)", [App_acronym, App_description, App_rNumber, App_startDate, App_endDate, App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done]);
+
+        await connection.execute("INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_StartDate, App_EndDate, App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)", [App_acronym, App_description, App_rNumber, startDate, endDate, App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done]);
 
         await connection.commit();
 

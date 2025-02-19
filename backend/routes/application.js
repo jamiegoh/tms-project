@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const { getApplications, createApplication, updateApplication, getAppPermits } = require('../controllers/applicationController');
-
+const { checkForPL } = require('../middleware/permissions');
 
 router.get('/get', getApplications);
-router.post('/create', createApplication);
-router.put('/update', updateApplication);
+router.post('/create',checkForPL, createApplication);
+router.put('/update', checkForPL, updateApplication);
 router.get('/get/permissions/:appid', getAppPermits);
 
 

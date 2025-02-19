@@ -153,5 +153,296 @@ const updateTask = async (req, res) => {
     }
 }
 
+const releaseTask = async (req, res) => {
+    const connection = await db.getConnection();
 
-module.exports =  { getTasks, createTask, updateTask, getDetailedTask };
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'OPEN >> TODO (Task Released)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+
+        await connection.execute("UPDATE Task SET Task_state = 'TODO', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+
+        await connection.commit();
+
+        res.json({ message: 'Task released' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error releasing task:", err);
+        res.status(500).json({ message: 'Error releasing task', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const workOnTask = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'TODO >> DOING (Working on Task)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'DOING', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        
+        await connection.commit();
+
+        res.json({ message: 'Task started' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error starting task:", err);
+        res.status(500).json({ message: 'Error starting task', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const returnTaskToToDo = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'DOING >> TODO (Returned to ToDo)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'TODO', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+
+        await connection.commit();
+
+        res.json({ message: 'Task returned to ToDo' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error returning task to ToDo:", err);
+        res.status(500).json({ message: 'Error returning task to ToDo', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const seekApproval = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'DOING >> DONE (Seeking Approval)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        //email trigger to DONE permit group here
+        console.log("TRIGGERING EMAIL");
+
+
+        await connection.commit();
+
+        res.json({ message: 'Task sent for approval' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error sending task for approval:", err);
+        res.status(500).json({ message: 'Error sending task for approval', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const reqForExtension = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'DOING >> DONE (Deadline Extension Requested)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        //email trigger to done group where email says task is sent for extension
+        await connection.commit();
+
+        res.json({ message: 'Task sent for extension' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error sending task for extension:", err);
+        res.status(500).json({ message: 'Error sending task for extension', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const approveTask = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'DONE >> CLOSED (Task Approved)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'CLOSED', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        //email trigger to task owner that task is approved
+        await connection.commit();
+
+        res.json({ message: 'Task approved' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error approving task:", err);
+        res.status(500).json({ message: 'Error approving task', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+const rejectTask = async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const task_id = req.params.id;
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const note = {
+            text: 'DONE >> DOING (Task Rejected)',
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'system',
+            currState: task[0].Task_state,
+        }
+
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, ...parsedNotes];
+
+        await connection.execute("UPDATE Task SET Task_state = 'DOING', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        await connection.commit();
+
+        res.json({ message: 'Task rejected' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error rejecting task:", err);
+        res.status(500).json({ message: 'Error rejecting task', error: err });
+    } finally {
+        connection.release();
+    }
+}
+
+
+
+module.exports =  { getTasks, createTask, updateTask, getDetailedTask, releaseTask, workOnTask, returnTaskToToDo, seekApproval, reqForExtension, approveTask, rejectTask };

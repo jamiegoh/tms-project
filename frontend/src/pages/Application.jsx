@@ -84,6 +84,14 @@ const Application = () => {
         open: true,
       });
     } catch (error) {
+      if (error.response && error.response.status === 403) {
+        setSnackbarInfo({
+          message: "Forbidden. You do not have permission to create an application.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
       setSnackbarInfo({
         message: "Failed to create application. Please try again.",
         severity: "error",
@@ -104,6 +112,14 @@ const Application = () => {
         open: true,
       });
     } catch (error) {
+      if (error.response && error.response.status === 403) {
+        setSnackbarInfo({
+          message: "Forbidden. You do not have permission to update an application.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
       setSnackbarInfo({
         message: "Failed to update application. Please try again.",
         severity: "error",

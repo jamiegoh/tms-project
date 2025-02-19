@@ -40,5 +40,33 @@ exports.checkAppPermit = async (req, res, next) => {
         res.status(403).json({ message: 'Forbidden' });
     }
 }
+
+exports.checkForPL = async (req, res, next) => {
+    const token = req.cookies.token;
+
+    const user = jwt.decode(token).user.username;
+
+    if(await checkGroup(user, "pl")){
+        next();
+    }
+    else{
+        res.status(403).json({ message: 'Forbidden' });
+
+    }
+}
+
+exports.checkForPM = async (req, res, next) => {
+    const token = req.cookies.token;
+
+    const user = jwt.decode(token).user.username;
+
+    if(await checkGroup(user, "pm")){
+        next();
+    }
+    else{
+        res.status(403).json({ message: 'Forbidden' });
+
+    }
+}
     
 

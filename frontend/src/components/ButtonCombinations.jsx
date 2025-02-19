@@ -1,72 +1,96 @@
-import React, {useState, useEffect} from 'react';
-import { Box, Button } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState } from "react";
+import { Box, Button, Snackbar, Alert } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
+const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
+  const task_id = useParams().id;
+  const app_id = task_id.split("_")[0];
+  const navigate = useNavigate();
 
-const ButtonCombinations = ({taskState, handleUpdateTask, permits}) => {
+  // Snackbar State
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
-    const task_id = useParams().id;
-    const app_id = task_id.split('_')[0];
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
-    const handleReleaseTask = () => {
-        alert("Task Released!");
-    }
-    const handleWorkOnTask = () => {
-        alert("Task is now in progress!");
-    }
-    const handleReturnToToDo = () => {
-        alert("Task returned to ToDo list!");
-    }
-    const handleSeekApproval = () => {
-        alert("Approval requested!");
-    }
-    const handleDeadlineExetension = () => {
-        alert("Deadline extension requested!");
-    }
-    const handleRejectTask = () => {
-        alert("Task rejected!");
-    };
-    const handleApproveTask = () => {
-        alert("Task approved!");
-    };
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
-    if (taskState == 'OPEN' && permits.App_permit_Open) {
-        return (
-        <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
-        <Button onClick={handleReleaseTask} variant="contained" sx={{ marginTop: 2, }}>Release Task</Button>
-        <Button onClick={handleUpdateTask} variant="contained" sx={{ marginTop: 2, }}>Save Changes</Button>
-        </Box>
-        )
-  }
-  else if (taskState == 'TODO' && permits.App_permit_toDoList) {
-    return (
-        <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
-    <Button onClick={handleWorkOnTask} variant="contained" sx={{ marginTop: 2, }}>Work On Task</Button>
-    <Button onClick={handleUpdateTask} variant="contained" sx={{ marginTop: 2, }}>Save Changes</Button>
-    </Box>
-    )
-}
-    else if (taskState == 'DOING' && permits.App_permit_Doing) {
-        return (  <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
-        <Button onClick={handleReturnToToDo} variant="contained" sx={{ marginTop: 2, }}>Return Task to ToDo List</Button>
-        <Button onClick={handleSeekApproval} variant="contained" sx={{ marginTop: 2, }}>Seek Approval</Button>
-        <Button onClick={handleDeadlineExetension} variant="contained" sx={{ marginTop: 2, }}>Request for Deadline Extension</Button>
-        <Button onClick={handleUpdateTask} variant="contained" sx={{ marginTop: 2, }}>Save Changes</Button>
-        </Box>)
+  const handleAction = async (url, successMessage) => {
+    try {
+      await axios.post(url);
+      showSnackbar(successMessage);
+      setTimeout(() => navigate(-1), 1000);
+    } catch (error) {
+      console.error(error);
+      showSnackbar("An error occurred", "error");
     }
-    else if (taskState == 'DONE' && permits.App_permit_Done) {
-        return (  <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
-            <Button onClick={handleRejectTask} variant="contained" sx={{ marginTop: 2, }}>Reject Task</Button>
-            <Button onClick={handleApproveTask} variant="contained" sx={{ marginTop: 2, }}>Approve Task</Button>
-            <Button onClick={handleUpdateTask} variant="contained" sx={{ marginTop: 2, }}>Save Changes</Button>
-            </Box>)
-    }
-    else {
-        return (
-            <div>View Only</div>
-        )
-    }
-  }
+  };
+
+  return (
+    <>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+        {taskState === "OPEN" && permits.App_permit_Open && (
+          <>
+            <Button onClick={() => handleAction(`/tasks/release/${task_id}`, "Task released successfully!")} variant="contained">
+              Release Task
+            </Button>
+            <Button onClick={handleUpdateTask} variant="contained">
+              Save Changes
+            </Button>
+          </>
+        )}
+        {taskState === "TODO" && permits.App_permit_toDoList && (
+          <>
+            <Button onClick={() => handleAction(`/tasks/workon/${task_id}`, "Working on Task!")} variant="contained">
+              Work On Task
+            </Button>
+            <Button onClick={handleUpdateTask} variant="contained">
+              Save Changes
+            </Button>
+          </>
+        )}
+        {taskState === "DOING" && permits.App_permit_Doing && (
+          <>
+            <Button onClick={() => handleAction(`/tasks/returnTask/${task_id}`, "Task returned to ToDo list!")} variant="contained">
+              Return Task to ToDo List
+            </Button>
+            <Button onClick={() => handleAction(`/tasks/approval/${task_id}`, "Approval requested!")} variant="contained">
+              Seek Approval
+            </Button>
+            <Button onClick={() => handleAction(`/tasks/extend/${task_id}`, "Deadline extension requested!")} variant="contained">
+              Request Deadline Extension
+            </Button>
+            <Button onClick={handleUpdateTask} variant="contained">
+              Save Changes
+            </Button>
+          </>
+        )}
+        {taskState === "DONE" && permits.App_permit_Done && (
+          <>
+            <Button onClick={() => handleAction(`/tasks/reject/${task_id}`, "Task rejected!")} variant="contained">
+              Reject Task
+            </Button>
+            <Button onClick={() => handleAction(`/tasks/approve/${task_id}`, "Task approved!")} variant="contained">
+              Approve Task
+            </Button>
+            <Button onClick={handleUpdateTask} variant="contained">
+              Save Changes
+            </Button>
+          </>
+        )}
+      </Box>
+
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+};
 
 export default ButtonCombinations;

@@ -46,7 +46,7 @@ const Task = () => {
   return (
     <>
         <Header/>
-    <Container>
+    <Box sx={{ mt: 4, mx: 4 }}>
         <Typography variant="h4" align="center" sx={{ my: 3 }}> Task Board </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
         <Button variant="contained" onClick={handleCreatePlan}>
@@ -62,15 +62,16 @@ const Task = () => {
           Loading tasks...
         </Typography>
       ) : (
-        <Grid container spacing={10} sx={{display: "flex", justifyContent: "space-between", px: 0, }}>
+        <Grid container spacing={4} columns={5} sx={{display: "flex", justifyContent: "center", px: 0, }}>
           {["open", "todo", "doing", "done", "closed"].map((status) => (
-            <Grid item xs={2} key={status}>
+            <Grid item xs={2} key={status} >
               <Box
                 sx={{
                   textAlign: "center",
                   padding: 2,
                   border: "2px solid #ddd",
                   width: "100%",
+                  
                 }}
               >
                 <Typography
@@ -79,10 +80,10 @@ const Task = () => {
                 >
                   {status}
                 </Typography>
-                <Box sx={{ maxHeight: "500px", overflowY: "auto" }}>
+                <Box sx={{ maxHeight: "90vh", minWidth: "15vw", maxWidth: "15vw" }}>
                   {tasks[status]?.map((task) => (
-                    <Card raised={true}key={task.Task_id} sx={{ margin: 3, border: 4, borderColor: task.Plan_color }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
-                      <CardContent>
+                    <Card raised={true}key={task.Task_id} sx={{ margin: 3, border: 4, borderColor: task.Plan_color, maxHeight: "15vh", maxWidth: "13vw", minHeight: "15vh", "minWidth": "13vw" }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
+                      <CardContent sx={{display : 'flex', flexDirection: 'column'}}>
                       <Typography variant="caption" sx={{justifyContent: 'start', display: 'flex'}}>
                           {task.Task_plan}
                         </Typography>
@@ -107,7 +108,7 @@ const Task = () => {
           ))}
         </Grid>
       )}
-    </Container>
+    </Box>
     </>
   );
 };
