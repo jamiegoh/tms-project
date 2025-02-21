@@ -6,12 +6,24 @@ const createPlan = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-       const {plan_name, start_date, end_date} = req.body;
+       let {plan_name, start_date, end_date} = req.body;
 
-       //plan name is 50 char and alphanumeric + space
-         if (!/^[a-zA-Z0-9 ]{1,50}$/.test(plan_name)) {
-              return res.status(400).json({ message: 'Invalid plan name' });
-         }
+        if(!/^[a-zA-Z0-9 ]{1,50}$/.test(plan_name)) {
+            return res.status(400).json({ message: 'Invalid plan name' });
+        }
+
+        if(start_date === "") {
+            start_date = null;
+        }
+        if(end_date === "") {
+            end_date = null;
+        }
+
+        const [plan] = await connection.execute("SELECT * FROM Plan WHERE Plan_MVP_name = ?", [plan_name]);
+
+        if(plan.length > 0) {
+            return res.status(400).json({ message: 'Plan of this name already exists' });
+        }
 
        const { appid } = req.params;
 

@@ -24,6 +24,11 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
       showSnackbar(successMessage);
       setTimeout(() => navigate(-1), 1000);
     } catch (error) {
+      if(error.response && error.response.status === 403) {
+        showSnackbar("Unauthorized", "error");
+        setTimeout(() => navigate(-1), 1000);
+        return;
+      }
       console.error(error);
       showSnackbar("An error occurred", "error");
     }
@@ -37,7 +42,7 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
             <Button onClick={() => handleAction(`/tasks/release/${task_id}`, "Task released successfully!")} variant="contained">
               Release Task
             </Button>
-            <Button onClick={handleUpdateTask} variant="contained">
+            <Button onClick={() => {handleUpdateTask; setTimeout(() => navigate(-1),1000 )}} variant="contained">
               Save Changes
             </Button>
           </>

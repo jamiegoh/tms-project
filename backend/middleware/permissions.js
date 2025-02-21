@@ -25,12 +25,23 @@ exports.checkAppPermit = async (req, res, next) => {
     const token = req.cookies.token;
 
     const taskid = req.params.id;
+    let state;
+    let appid;
 
-    const result = await db.execute("SELECT Task_state FROM Task WHERE Task_id = ?", [taskid]);
+    if(taskid === undefined){
+        state = "CREATE";
 
-    const state = result[0][0].Task_state;
+        appid = req.params.appid;
+    }
+    else {
+        
+            const result = await db.execute("SELECT Task_state FROM Task WHERE Task_id = ?", [taskid]);
+        
+            state = result[0][0].Task_state;
+            appid = taskid.split("_")[0];
 
-    const appid = taskid.split("_")[0];
+    }
+
 
     const user = jwt.decode(token).user.username;
 

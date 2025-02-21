@@ -135,6 +135,11 @@ const updateNotes = async (req, res) => {
             await connection.rollback();
             return res.status(400).json({ message: 'Task not found' });
         }
+
+        if(task_notes === ""){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task notes are the same' });
+        }
         
         
     
@@ -153,6 +158,7 @@ const updateNotes = async (req, res) => {
 
 
         await connection.execute("UPDATE Task SET Task_notes = ? WHERE Task_id = ?", [notes, task_id]);
+        await connection.execute("UPDATE Task SET Task_owner = ? WHERE Task_id = ?", [req.user.user.username, task_id]);
 
         await connection.commit();
 
@@ -184,6 +190,11 @@ const updatePlan = async (req, res) => {
         
         }
 
+        if(task_plan === task[0].Task_plan){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task plan is the same' });
+        }
+
         if(task[0].Task_state !== 'DONE' && task[0].Task_state !== 'OPEN'){
             console.log("Task state is not DONE or OPEN" + task[0].Task_state);
             await connection.rollback();
@@ -210,6 +221,8 @@ const updatePlan = async (req, res) => {
 
 
         await connection.execute("UPDATE Task SET Task_plan = ?, Task_notes = ? WHERE Task_id = ?", [task_plan, JSON.stringify(parsedNotes), task_id]);
+        await connection.execute("UPDATE Task SET Task_owner = ? WHERE Task_id = ?", [req.user.user.username, task_id]);
+
         await connection.commit();
 
         res.json({ message: 'Task updated' });

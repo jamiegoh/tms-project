@@ -11,6 +11,7 @@ import {
 import Grid from '@mui/material/Grid2';
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import CreatePlan from "./CreatePlan";
 
 const Task = () => {
   const [loading, setLoading] = useState(true);
@@ -34,9 +35,6 @@ const Task = () => {
       });
   }, [appid]);
 
-  const handleCreatePlan = () => {
-    navigate(`/plans/${appid}/create`);
-  };
 
   const handleCreateTask = () => {
     navigate(`/tasks/${appid}/create`);
@@ -48,9 +46,7 @@ const Task = () => {
     <Box sx={{ mt: 4, mx: 4 }}>
         <Typography variant="h4" align="center" sx={{ my: 3 }}> Task Board </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
-        <Button variant="contained" onClick={handleCreatePlan}>
-          Create Plan
-        </Button>
+        <CreatePlan/>
         <Button variant="contained" onClick={handleCreateTask}>
           Create Task
         </Button>
@@ -63,7 +59,7 @@ const Task = () => {
       ) : (
         <Box sx={{display: "flex", justifyContent: "center", gap: 2 }}>
           {["open", "todo", "doing", "done", "closed"].map((status) => (
-            <Grid item xs={2} key={status} >
+            <Box key={status}  >
               <Box
                 sx={{
                   textAlign: "center",
@@ -75,13 +71,13 @@ const Task = () => {
               >
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: "bold", textTransform: "capitalize" }}
+                  sx={{ fontWeight: "bold", textTransform: "capitalize", mb: 2 }}
                 >
                   {status}
                 </Typography>
-                <Box sx={{  minWidth: "15vw", maxWidth: "15vw" }}>
+                <Box sx={{  minWidth: "15vw", maxWidth: "15vw", display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
                   {tasks[status]?.map((task) => (
-                    <Card raised={true}key={task.Task_id} sx={{ margin: 3, border: 4, borderColor: task.Plan_color, maxHeight: "15vh", maxWidth: "13vw", minHeight: "15vh", "minWidth": "13vw" }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
+                    <Card raised={true}key={task.Task_id} sx={{  border: 4, borderColor: task.Plan_color, maxHeight: "15vh", maxWidth: "13vw", minHeight: "15vh", "minWidth": "13vw" }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
                       <CardContent sx={{display : 'flex', flexDirection: 'column'}}>
                       <Typography variant="caption" sx={{justifyContent: 'start', display: 'flex'}}>
                           {task.Task_plan}
@@ -103,7 +99,7 @@ const Task = () => {
                   ))}
                 </Box>
               </Box>
-            </Grid>
+            </Box>
           ))}
         </Box>
       )}

@@ -40,7 +40,7 @@ async function mail({ app_acronym, type }) {
     }
 
   const info = await transporter.sendMail({
-    from: '"Serena Bogan 👻" <serena.bogan@ethereal.email>', // sender address
+    from: '" TMS System 👻" <walter57@ethereal.email>', // sender address
     to: emailList, // list of receivers
     subject: subject,
     text: text,

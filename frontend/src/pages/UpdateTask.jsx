@@ -13,6 +13,7 @@ const DetailedTask = () => {
   const [permits, setPermits] = useState({});
 
   const [newNote, setNewNote] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const [notes, setNotes] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -44,6 +45,8 @@ const DetailedTask = () => {
         setPermits(permits);
     });
 
+      setLoading(false);
+
     }, [id]);
   
   const navigate = useNavigate();
@@ -57,19 +60,66 @@ const DetailedTask = () => {
   };
 
   const handleUpdateTask = async () => {
+    let updateNoteSuccess = false;
+    let updatePlanSuccess = false;
+  
     try {
-      await axios.put(`/tasks/update/notes/${id}`, {task_notes: newNote});
-
-      if(plan && (taskState === 'OPEN' || taskState === "DONE")) {
-        await axios.put(`/tasks/update/plan/${id}`, {task_plan: plan});
+      if (newNote !== "") {
+        await axios.put(`/tasks/update/notes/${id}`, { task_notes: newNote });
+        updateNoteSuccess = true;
       }
-
-      showSnackbar("Task updated successfully!");
     } catch (error) {
-      console.error(error);
-      showSnackbar("Failed to update task", "error");
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("not found")) {
+          showSnackbar("Task not found.", "error");
+        } else {
+          showSnackbar("No changes made to notes.", "warning");
+        }
+      } else {
+        if(error.response && error.response.status === 403) {
+          showSnackbar("Unauthorized", "error");
+          setTimeout(() => navigate(-1), 1000);
+          return;
+        }
+        console.error(error);
+        showSnackbar("Failed to update task notes.", "error");
+      }
+    }
+  
+    try {
+      if ((taskState === "OPEN" || taskState === "DONE")) {
+
+        await axios.put(`/tasks/update/plan/${id}`, { task_plan: plan === "" ? null : plan });  
+        updatePlanSuccess = true;
+      }
+    } catch (error) {
+
+
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || "";
+        if (errorMessage.includes("not found")) {
+          showSnackbar("Task not found.", "error");
+        } else {
+          showSnackbar("Plan has not been changed", "warning");
+        }
+      } else {
+        console.error(error);
+        showSnackbar("Failed to update plan.", "error");
+      }
+    }
+  
+    if (updateNoteSuccess && updatePlanSuccess) {
+      showSnackbar("Task notes & plan updated successfully!", "success");
+    }
+    else if (updateNoteSuccess) {
+      showSnackbar("Task notes updated successfully!", "success");
+    }
+    else if (updatePlanSuccess) {
+      showSnackbar("Task plan updated successfully!", "success");
     }
   };
+  
 
   const convertState = (state) => {
     switch(state) {
@@ -84,6 +134,10 @@ const DetailedTask = () => {
       default:
         return '';
     }
+  }
+
+  if(loading) {
+    return <Typography>Loading...</Typography>;
   }
 
   return (
@@ -106,9 +160,9 @@ const DetailedTask = () => {
         </Box>
         </Box>
         <Box >
-        <Select sx={{width: '30vw'}} value={plan} onChange={(e) => setPlan(e.target.value)} displayEmpty disabled={!permits[`App_permit_${convertState(taskState)}`] || !(taskState === 'OPEN' || taskState === 'DONE')}
+        <Select sx={{width: '30vw'}}  value={plans?.some(p => p.Plan_MVP_name === plan) ? plan : ""} onChange={(e) => setPlan(e.target.value)} displayEmpty disabled={!permits[`App_permit_${convertState(taskState)}`] || !(taskState === 'OPEN' || taskState === 'DONE')}
         >
-          <MenuItem value="">Select Plan</MenuItem>
+          <MenuItem value={""} >Select Plan</MenuItem>
           {plans?.map((plan, index) => (
             <MenuItem key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</MenuItem>
           ))}
@@ -135,7 +189,7 @@ const DetailedTask = () => {
           <Box sx={{  whiteSpace: "pre-wrap", height: 180, overflowY: "auto", paddingX: 2, marginBottom: 2, border:1, borderColor: "grey.400", borderRadius: 1 }}>
             <Typography variant="subtitle2">Notes History (Latest → Oldest)</Typography>
             {notes?.map((note, index) => (
-              <Typography key={index} sx={{ marginTop: 1, wordWrap: "break-word", ...(note.type !== 'comment' ? { fontStyle: 'italic' } : { fontWeight: '1000'}) }} >{note.date_posted.split('T')[0]} {note.date_posted.split('T')[1].split('.')[0]} ({note.user}) {note.text}</Typography>
+              <Typography key={index} sx={{ marginTop: 1, wordWrap: "break-word", ...(note.type !== 'comment' ? { fontStyle: 'italic' } : { fontWeight: '1000'}) }} >{note.date_posted.split('T')[0]} {note.date_posted.split('T')[1].split('.')[0]} {note.currState} ({note.user}) {note.text}</Typography>
             ))}
           </Box>
           <textarea

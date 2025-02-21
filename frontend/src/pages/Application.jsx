@@ -71,9 +71,44 @@ const Application = () => {
         return;
       }
 
+      if(application.some(app => app.App_acronym.toLowerCase() === newAppAcronym.toLowerCase())){
+        setSnackbarInfo({
+          message: "Application acronym already exists.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+
+      if(newAppRNumber < 0 ){
+        setSnackbarInfo({ 
+          message: "RNumber must be a positive integer.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+
+     if(newAppRNumber > Number.MAX_SAFE_INTEGER){
+        setSnackbarInfo({ 
+          message: "RNumber is too large.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+     
+      if(newAppDescription.length > 1000){
+        setSnackbarInfo({
+          message: "Application description must have a maximum length of 1000 characters.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+
       //validate permits on current existing groups
     
-
       const newApplication = {
         App_acronym: newAppAcronym,
         App_description: newAppDescription,
