@@ -40,7 +40,6 @@ const Task = () => {
 
   const handleCreateTask = () => {
     navigate(`/tasks/${appid}/create`);
-    console.log("Create task button clicked");
   };
 
   return (
@@ -62,7 +61,7 @@ const Task = () => {
           Loading tasks...
         </Typography>
       ) : (
-        <Grid container spacing={4} columns={5} sx={{display: "flex", justifyContent: "center", px: 0, }}>
+        <Box sx={{display: "flex", justifyContent: "center", gap: 2 }}>
           {["open", "todo", "doing", "done", "closed"].map((status) => (
             <Grid item xs={2} key={status} >
               <Box
@@ -80,7 +79,7 @@ const Task = () => {
                 >
                   {status}
                 </Typography>
-                <Box sx={{ maxHeight: "90vh", minWidth: "15vw", maxWidth: "15vw" }}>
+                <Box sx={{  minWidth: "15vw", maxWidth: "15vw" }}>
                   {tasks[status]?.map((task) => (
                     <Card raised={true}key={task.Task_id} sx={{ margin: 3, border: 4, borderColor: task.Plan_color, maxHeight: "15vh", maxWidth: "13vw", minHeight: "15vh", "minWidth": "13vw" }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
                       <CardContent sx={{display : 'flex', flexDirection: 'column'}}>
@@ -89,7 +88,7 @@ const Task = () => {
                         </Typography>
                         <Typography
                           variant="body1"
-                          sx={{ fontWeight: "bold", padding: 1 }}
+                          sx={{ fontWeight: "bold", padding: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: "13vw" }}
                         >
                           {task.Task_name}
                         </Typography>
@@ -106,7 +105,7 @@ const Task = () => {
               </Box>
             </Grid>
           ))}
-        </Grid>
+        </Box>
       )}
     </Box>
     </>

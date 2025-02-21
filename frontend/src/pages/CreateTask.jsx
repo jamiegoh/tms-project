@@ -33,6 +33,12 @@ const CreateTask = () => {
       setSnackbar({ open: true, message: "Task name is required.", severity: "warning" });
       return;
     }
+
+    if(taskName.length > 100) {
+      setSnackbar({ open: true, message: "Task name is too long.", severity: "warning" });
+      return;
+    }
+    
     const payload = { task_name: taskName, task_plan: plan, task_description: description, task_notes: newNote };
     try {
       await axios.post(`/tasks/${appid}/create`, payload);

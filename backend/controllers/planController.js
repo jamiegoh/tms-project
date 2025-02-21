@@ -8,6 +8,11 @@ const createPlan = async (req, res) => {
 
        const {plan_name, start_date, end_date} = req.body;
 
+       //plan name is 50 char and alphanumeric + space
+         if (!/^[a-zA-Z0-9 ]{1,50}$/.test(plan_name)) {
+              return res.status(400).json({ message: 'Invalid plan name' });
+         }
+
        const { appid } = req.params;
 
        const colorArray = ['#bdd0c4','#9ab7d3','#f5d2d3','#f7e1d3','#dfccf1'];

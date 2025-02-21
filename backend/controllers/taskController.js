@@ -71,6 +71,17 @@ const createTask = async (req, res) => {
 
         const {  task_name, task_description, task_notes, task_plan } = req.body;
 
+        if (!task_name){
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task name is required' });
+        }
+
+        if (!/^[a-zA-Z0-9 ]{1,50}$/.test(task_name)) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid task name' });
+        }
+
+
         const plan = task_plan ? task_plan : null;
         const notes = task_notes ? [task_notes] : [];
 

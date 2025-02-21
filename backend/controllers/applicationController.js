@@ -52,6 +52,18 @@ const createApplication = async (req, res) => {
         const startDate = App_startDate === '' ? null : new Date(App_startDate);
         const endDate = App_endDate === '' ? null : new Date(App_endDate);
 
+        if (!/^[a-zA-Z0-9]{1,50}$/.test(App_acronym)) {
+            return res.status(400).json({ message: 'Application acronym must be alphanumeric and have a maximum length of 50 characters' });
+        }
+
+        if(App_description?.length > 1000){
+            return res.status(400).json({ message: 'Application description must have a maximum length of 1000 characters' });
+        }
+
+        if(App_rNumber.length > 10){
+            return res.status(400).json({ message: 'Application RNumber must have a maximum length of 10 characters' });
+        }
+
 
         await connection.execute("INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_StartDate, App_EndDate, App_permit_create, App_permit_open, App_permit_toDoList, App_permit_doing, App_permit_done) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)", [App_acronym, App_description, App_rNumber, startDate, endDate, App_permit_Create, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done]);
 

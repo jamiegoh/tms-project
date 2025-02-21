@@ -61,6 +61,19 @@ const Application = () => {
   const handleCreateApplication = async (e) => {
     e.preventDefault();
     try {
+
+      if(!/^[a-zA-Z0-9 ]{1,50}$/.test(newAppAcronym)){
+        setSnackbarInfo({
+          message: "Invalid application acronym. Acronym must be alphanumeric and have a maximum length of 50 characters.",
+          severity: "error",
+          open: true,
+        });
+        return;
+      }
+
+      //validate permits on current existing groups
+    
+
       const newApplication = {
         App_acronym: newAppAcronym,
         App_description: newAppDescription,
