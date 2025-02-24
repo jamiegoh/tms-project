@@ -227,11 +227,13 @@ const Application = () => {
               />
             </TableCell>
             <TableCell>
-              <TextField
+              <textarea
+                cols="50"
                 label="Description"
                 variant="outlined"
                 onChange={(e) => setNewAppDescription(e.target.value)}
                 value={newAppDescription}
+                style={{resize:"vertical"}} 
               />
             </TableCell>
             <TableCell>
@@ -350,13 +352,15 @@ const Application = () => {
                 </Link>
               </TableCell>
               <TableCell>
-                <TextField
+                <textarea
+                cols="50"
                   value={row.App_description || ""}
                   onChange={(e) => {
                     const updatedApp = [...application];
                     updatedApp[index].App_description = e.target.value;
                     setApplication(updatedApp);
                   }}
+                  style={{resize:"vertical"}}
                 />
               </TableCell>
               <TableCell>

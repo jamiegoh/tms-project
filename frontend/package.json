@@ -12,6 +12,7 @@
     "@emotion/styled": "latest",
     "@mui/material": "latest",
     "axios": "^1.7.9",
+    "dayjs": "^1.11.13",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "^7.1.3"

@@ -3,6 +3,12 @@ import axios from "axios";
 import { Container, TextField, Button, Select, MenuItem, Typography, Box, Paper, Snackbar, Alert } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import ButtonCombinations from "../components/ButtonCombinations";
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const DetailedTask = () => {
   const [taskName, setTaskName] = useState("");
@@ -18,6 +24,8 @@ const DetailedTask = () => {
   const [notes, setNotes] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
+  const [originalTaskPlan, setOriginalTaskPlan] = useState("");
+
     const id = useParams().id;
     const app_id = id.split('_')[0];
 
@@ -26,12 +34,11 @@ const DetailedTask = () => {
         const task = response.data;
         setTaskName(task.Task_name);
         setPlan(task.Task_plan);
+        setOriginalTaskPlan(task.Task_plan);
         setDescription(task.Task_description);
         setNotes(JSON.parse(task.Task_notes));
 
         setTaskState(task.Task_state);
-        console.log(task.Task_state);
-
         
 
         axios.get(`/plans/get/${app_id}`).then((response) => {
@@ -57,6 +64,10 @@ const DetailedTask = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const isPlanChanged = () => {
+    return plan !== originalTaskPlan;
   };
 
   const updateTaskNotes = async () => {
@@ -187,7 +198,8 @@ const DetailedTask = () => {
           <Box sx={{  whiteSpace: "pre-wrap", height: 180, overflowY: "auto", paddingX: 2, marginBottom: 2, border:1, borderColor: "grey.400", borderRadius: 1 }}>
             <Typography variant="subtitle2">Notes History (Latest → Oldest)</Typography>
             {notes?.map((note, index) => (
-              <Typography key={index} sx={{ marginTop: 1, wordWrap: "break-word", ...(note.type !== 'comment' ? { fontStyle: 'italic' } : { fontWeight: '1000'}) }} >{note.date_posted.split('T')[0]} {note.date_posted.split('T')[1].split('.')[0]} {note.currState} ({note.user}) {note.text}</Typography>
+              <Typography key={index} sx={{ marginTop: 1, wordWrap: "break-word", ...(note.type !== 'comment' ? { fontStyle: 'italic' } : { fontWeight: '1000'}) }} >{dayjs(note.date_posted).tz("Asia/Singapore").format("YYYY-MM-DD HH:mm:ss ")} 
+{note.currState} ({note.user}) {note.text}</Typography>
             ))}
           </Box>
           <textarea
@@ -201,7 +213,7 @@ const DetailedTask = () => {
         </Box>
       </Box>
     <Box sx={{display: 'flex', justifyContent: 'flex-end' }}>
-       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} newNote ={newNote} />
+       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} newNote ={newNote} task_plan={plan} updateTaskNotes={updateTaskNotes} isPlanChanged={isPlanChanged}/>
     </Box>
     <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>{snackbar.message}</Alert>

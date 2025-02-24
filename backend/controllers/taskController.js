@@ -16,7 +16,7 @@ const getTasks = async (req, res) => {
                 p.Plan_color
              FROM Task t
              LEFT JOIN Plan p ON t.Task_plan = p.Plan_MVP_name
-             WHERE t.Task_app_Acronym = ?`, 
+             WHERE t.Task_app_Acronym = ? AND t.Task_app_Acronym = p.Plan_app_Acronym`, 
             [task_app_acronym]
         );
 
@@ -48,6 +48,7 @@ const getDetailedTask = async (req, res) => {
         const task_id = req.params.id;
 
         const [task] = await db.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+
         res.json(task[0]);
     } catch (err) {
         console.error("Error getting task:", err);
@@ -83,7 +84,14 @@ const createTask = async (req, res) => {
 
 
         const plan = task_plan ? task_plan : null;
-        const notes = task_notes ? [task_notes] : [];
+
+        const noteJson = [{
+            text: task_notes,
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'comment',
+            currState: 'OPEN',
+        }]
 
         const task_creator = req.user.user.username;
 
@@ -100,7 +108,7 @@ const createTask = async (req, res) => {
         const app_r_number_value = app_r_number[0].App_Rnumber;
         const task_id = task_app_acronym + "_" + app_r_number_value;
 
-        await connection.execute("INSERT INTO Task (Task_id, Task_name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [task_id, task_name, task_description, notes, plan, task_app_acronym, task_state, task_creator, task_creator, task_createDate]);
+        await connection.execute("INSERT INTO Task (Task_id, Task_name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [task_id, task_name, task_description, noteJson, plan, task_app_acronym, task_state, task_creator, task_creator, task_createDate]);
 
         const new_r_number = app_r_number_value + 1;
         await connection.execute("UPDATE Application SET App_Rnumber = ? WHERE App_Acronym = ?", [new_r_number, task_app_acronym]);
@@ -195,10 +203,10 @@ const updatePlan = async (req, res) => {
             return res.status(400).json({ message: 'Task plan is the same' });
         }
 
-        if(task[0].Task_state !== 'DONE' && task[0].Task_state !== 'OPEN'){
-            console.log("Task state is not DONE or OPEN" + task[0].Task_state);
+        if(task[0].Task_state !== 'OPEN'){
+            console.log("Task state is not OPEN" + task[0].Task_state);
             await connection.rollback();
-            return res.status(400).json({ message: 'Task state must be DONE or OPEN' });
+            return res.status(400).json({ message: 'Task state must OPEN' });
         }   
 
 
@@ -407,7 +415,7 @@ const seekApproval = async (req, res) => {
         const notes = [note, ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
-        await mail({ app_acronym: task[0].Task_app_Acronym, type: "done" });
+        await mail({ app_acronym: task[0].Task_app_Acronym, type: "done", task_id: task_id });
 
 
         await connection.commit();
@@ -455,7 +463,7 @@ const reqForExtension = async (req, res) => {
         const notes = [note, ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
-        await mail({ app_acronym: task[0].Task_app_Acronym, type: "extension" });
+        await mail({ app_acronym: task[0].Task_app_Acronym, type: "extension", task_id: task_id });
         await connection.commit();
 
         res.json({ message: 'Task sent for extension' });
@@ -530,6 +538,7 @@ const rejectTask = async (req, res) => {
         await connection.beginTransaction();
 
         const task_id = req.params.id;
+        const {task_plan, newNote} = req.body;   
 
         const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
 
@@ -551,10 +560,31 @@ const rejectTask = async (req, res) => {
             currState: task[0].Task_state,
         }
 
-        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
-        const notes = [note, ...parsedNotes];
+        const newNoteJson = {
+            text: newNote,
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'comment',
+            currState: task[0].Task_state,
+        }
 
-        await connection.execute("UPDATE Task SET Task_state = 'DOING', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
+        const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        const notes = [note, newNoteJson , ...parsedNotes];
+                      
+        if(task[0].Task_plan !== task_plan){
+                
+            const planNote = {
+                text: 'Plan changed from ' + task[0].Task_plan + ' to ' + task_plan,
+                user: req.user.user.username,
+                date_posted: new Date(),
+                type: 'system',
+                currState: task[0].Task_state,
+              }
+
+              notes.unshift(planNote);
+          }
+
+        await connection.execute("UPDATE Task SET Task_state = 'DOING', Task_owner = ?, Task_notes = ?, Task_plan = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes),  task_plan, task_id,]);
         await connection.commit();
 
         res.json({ message: 'Task rejected' });

@@ -5,7 +5,7 @@ const { getGroups, getGroupsByUser, getGroupsForSpecificUser, createGroup } = re
 const db = require('../db');
 const { checkPermissions } = require('../middleware/permissions');
 
-router.get("/get", checkPermissions, getGroups);
+router.get("/get", getGroups);
 router.get("/getbyuser", checkPermissions, getGroupsByUser);
 router.get("/getperms", getGroupsForSpecificUser);
 router.post("/create", checkPermissions, createGroup);

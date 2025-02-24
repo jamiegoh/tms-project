@@ -18,6 +18,7 @@ const Task = () => {
 
   const { appid } = useParams();
   const navigate = useNavigate();
+  const [permits, setPermits] = useState({});
 
   const [tasks, setTasks] = useState([]);
   useEffect(() => {
@@ -33,6 +34,11 @@ const Task = () => {
         console.error("Error fetching tasks:", error);
         setLoading(false);
       });
+
+      axios.get(`/application/get/permissions/${appid}`).then((response) => {
+        const permits = response.data;
+        setPermits(permits);
+      });
   }, [appid]);
 
 
@@ -44,12 +50,12 @@ const Task = () => {
     <>
         <Header/>
     <Box sx={{ mt: 4, mx: 4 }}>
-        <Typography variant="h4" align="center" sx={{ my: 3 }}> Task Board </Typography>
+        <Typography variant="h4" align="center" sx={{ my: 3 }}> Task Board - {appid} </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", my: 3 }}>
         <CreatePlan/>
-        <Button variant="contained" onClick={handleCreateTask}>
+        {permits.App_permit_Create && <Button variant="contained" onClick={handleCreateTask} >
           Create Task
-        </Button>
+        </Button>}
       </Box>
 
       {loading ? (
@@ -75,29 +81,55 @@ const Task = () => {
                 >
                   {status}
                 </Typography>
-                <Box sx={{  minWidth: "15vw", maxWidth: "15vw", display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  {tasks[status]?.map((task) => (
-                    <Card raised={true}key={task.Task_id} sx={{  border: 4, borderColor: task.Plan_color, maxHeight: "15vh", maxWidth: "13vw", minHeight: "15vh", "minWidth": "13vw" }} onClick={() => navigate(`/tasks/update/${task.Task_id}`)}>
-                      <CardContent sx={{display : 'flex', flexDirection: 'column'}}>
-                      <Typography variant="caption" sx={{justifyContent: 'start', display: 'flex'}}>
-                          {task.Task_plan}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: "bold", padding: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: "13vw" }}
-                        >
-                          {task.Task_name}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{justifyContent: 'start', display: 'flex'}}
-                        >
-                          {task.Task_id}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
+                <Box sx={{ minWidth: "15vw", maxWidth: "15vw", display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
+  {tasks[status]?.map((task) => (
+    <Card
+      raised={true}
+      key={task.Task_id}
+      sx={{
+        border: 2,
+        borderColor: task.Plan_color,
+        maxHeight: "15vh",
+        maxWidth: "13vw",
+        minHeight: "15vh",
+        minWidth: "13vw",
+        display: "flex",
+        flexDirection: "column"
+      }}
+      onClick={() => navigate(`/tasks/update/${task.Task_id}`)}
+    >
+      <CardContent
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          overflow: "hidden",
+          padding: 1
+        }}
+      >
+        <Typography variant="caption" sx={{ justifyContent: "start", display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {task.Task_plan}
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            fontWeight: "bold",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            maxWidth: "100%"
+          }}
+        >
+          {task.Task_name}
+        </Typography>
+        <Typography variant="caption" sx={{ justifyContent: "start", display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {task.Task_id}
+        </Typography>
+      </CardContent>
+    </Card>
+  ))}
+</Box>
+
               </Box>
             </Box>
           ))}

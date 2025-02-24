@@ -18,14 +18,14 @@ const createPlan = async (req, res) => {
         if(end_date === "") {
             end_date = null;
         }
+        const { appid } = req.params;
 
-        const [plan] = await connection.execute("SELECT * FROM Plan WHERE Plan_MVP_name = ?", [plan_name]);
+        const [plan] = await connection.execute("SELECT * FROM Plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?", [plan_name, appid]);
 
         if(plan.length > 0) {
             return res.status(400).json({ message: 'Plan of this name already exists' });
         }
-
-       const { appid } = req.params;
+        
 
        const colorArray = ['#bdd0c4','#9ab7d3','#f5d2d3','#f7e1d3','#dfccf1'];
        const color = colorArray[Math.floor(Math.random() * colorArray.length)];

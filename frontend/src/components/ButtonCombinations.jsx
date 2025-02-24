@@ -3,7 +3,7 @@ import { Box, Button, Snackbar, Alert } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const ButtonCombinations = ({ taskState, handleUpdateTask, permits, newNote }) => {
+const ButtonCombinations = ({ taskState, handleUpdateTask, permits, newNote, task_plan, updateTaskNotes,isPlanChanged }) => {
   const task_id = useParams().id;
   const navigate = useNavigate();
 
@@ -50,14 +50,32 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits, newNote }) =
       showSnackbar("An error occurred", "error");
     }
   }
+
+  const handleReject = async () => {
+    try {
+      await axios.post(`/tasks/reject/${task_id}`, {task_plan, newNote});
+      showSnackbar("Task rejected!");
+
+
+      setTimeout(() => navigate(-1), 1000);
+    } catch (error) {
+      if(error.response && error.response.status === 403) {
+        showSnackbar("Unauthorized", "error");
+        setTimeout(() => navigate(-1), 1000);
+        return;
+      }
+      console.error(error);
+      showSnackbar("An error occurred", "error");
+    }
+  }
   
 
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
         {taskState === "OPEN" && permits.App_permit_Open && (
-          <>
-            <Button onClick={() => handleAction(`/tasks/release/${task_id}`, "Task released successfully!")} variant="contained">
+          <Box sx={{display: "flex", justifyContent: "space-between", width: "75vw"}}>
+            <Button onClick={() => handleAction(`/tasks/release/${task_id}`, "Task released successfully!")} >
               Release Task
             </Button>
             <Button onClick={async () => {
@@ -73,46 +91,53 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits, newNote }) =
                 console.error(error);
                 showSnackbar("An error occurred", "error");
               }}} 
-              variant="contained">
+              >
               Save Changes
             </Button>
-          </>
+          </Box>
         )}
         {taskState === "TODO" && permits.App_permit_toDoList && (
-          <>
-            <Button onClick={() => handleAction(`/tasks/workon/${task_id}`, "Working on Task!")} variant="contained">
+          <Box sx={{display: "flex", justifyContent: "space-between", width: "75vw"}}>
+            <Button onClick={() => handleAction(`/tasks/workon/${task_id}`, "Working on Task!")} >
               Work On Task
             </Button>
-            <Button onClick={handleUpdateTask} variant="contained">
+            <Button onClick={handleUpdateTask} >
               Save Changes
             </Button>
-          </>
+          </Box>
         )}
         {taskState === "DOING" && permits.App_permit_Doing && (
-          <>
-            <Button onClick={() => handleAction(`/tasks/returnTask/${task_id}`, "Task returned to ToDo list!")} variant="contained">
+          <Box sx={{display: "flex", justifyContent: "space-between", gap: 2, width: "80vw"}}>
+            <Box>
+            <Button onClick={() => handleAction(`/tasks/returnTask/${task_id}`, "Task returned to ToDo list!")} >
               Return Task to ToDo List
             </Button>
-            <Button onClick={() => handleAction(`/tasks/approval/${task_id}`, "Approval requested!")} variant="contained">
+            <Button onClick={() => handleAction(`/tasks/approval/${task_id}`, "Approval requested!")} >
               Seek Approval
             </Button>
-            <Button onClick={() => handleAction(`/tasks/extend/${task_id}`, "Deadline extension requested!")} variant="contained">
+            <Button onClick={() => handleAction(`/tasks/extend/${task_id}`, "Deadline extension requested!")} >
               Request Deadline Extension
             </Button>
-            <Button onClick={handleUpdateTask} variant="contained">
+            </Box>
+            <Button onClick={handleUpdateTask} >
               Save Changes
             </Button>
-          </>
+          </Box>
         )}
         {taskState === "DONE" && permits.App_permit_Done && (
-          <>
-            <Button onClick={() => handleAction(`/tasks/reject/${task_id}`, "Task rejected!")} variant="contained">
+           <Box sx={{display: "flex", justifyContent: "space-between", width: "75vw"}}>
+            <Box>
+            <Button onClick={handleReject} >
               Reject Task
             </Button>
-            <Button onClick={handleApprove} variant="contained">
+            <Button onClick={handleApprove}  disabled={isPlanChanged()} >
               Approve Task
             </Button>
-          </>
+            </Box>
+            <Button onClick={updateTaskNotes} >
+              Save Changes
+            </Button>
+          </Box>
         )}
       </Box>
 

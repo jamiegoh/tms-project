@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function mail({ app_acronym, type }) {
+async function mail({ app_acronym, type, task_id }) {
 
     const [appPermit] = await db.execute("SELECT App_permit_Done FROM Application WHERE app_acronym = ?", [app_acronym]);
 
@@ -31,7 +31,7 @@ async function mail({ app_acronym, type }) {
     const emailList = emails.map(email => email.user_email).join(", ");
 
     if (type === "done"){
-        subject = `${app_acronym} - New task in Done state for review!`;
+        subject = `${app_acronym} - New task in Done state for review! - ${task_id}`;
         text = `New Task for review in ${app_acronym}! Log in to approve/reject`;
     }
     else {
@@ -40,7 +40,7 @@ async function mail({ app_acronym, type }) {
     }
 
   const info = await transporter.sendMail({
-    from: '" TMS System 👻" <walter57@ethereal.email>', // sender address
+    from: '" TMS System 👻" <rossie.marks@ethereal.email>', // sender address
     to: emailList, // list of receivers
     subject: subject,
     text: text,
