@@ -476,6 +476,7 @@ const approveTask = async (req, res) => {
         await connection.beginTransaction();
 
         const task_id = req.params.id;
+        const {newNote} = req.body;
 
         const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
 
@@ -497,8 +498,16 @@ const approveTask = async (req, res) => {
             currState: task[0].Task_state,
         }
 
+        const newNoteJson = {
+            text: newNote,
+            user: req.user.user.username,
+            date_posted: new Date(),
+            type: 'comment',
+            currState: task[0].Task_state,
+        }
+
         const parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
-        const notes = [note, ...parsedNotes];
+        const notes = [note, newNoteJson , ...parsedNotes];
 
         await connection.execute("UPDATE Task SET Task_state = 'CLOSED', Task_owner = ?, Task_notes = ? WHERE Task_id = ?", [req.user.user.username, JSON.stringify(notes), task_id]);
         await connection.commit();

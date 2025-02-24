@@ -59,14 +59,12 @@ const DetailedTask = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleUpdateTask = async () => {
-    let updateNoteSuccess = false;
-    let updatePlanSuccess = false;
-  
+  const updateTaskNotes = async () => {
     try {
       if (newNote !== "") {
         await axios.put(`/tasks/update/notes/${id}`, { task_notes: newNote });
-        updateNoteSuccess = true;
+        showSnackbar("Task notes updated successfully!", "success");
+        return true;
       }
     } catch (error) {
       if (error.response?.status === 400) {
@@ -76,26 +74,26 @@ const DetailedTask = () => {
         } else {
           showSnackbar("No changes made to notes.", "warning");
         }
+      } else if (error.response?.status === 403) {
+        showSnackbar("Unauthorized", "error");
+        setTimeout(() => navigate(-1), 1000);
+        return false;
       } else {
-        if(error.response && error.response.status === 403) {
-          showSnackbar("Unauthorized", "error");
-          setTimeout(() => navigate(-1), 1000);
-          return;
-        }
         console.error(error);
         showSnackbar("Failed to update task notes.", "error");
       }
     }
+    return false;
+  };
   
+  const updateTaskPlan = async () => {
     try {
-      if ((taskState === "OPEN" || taskState === "DONE")) {
-
-        await axios.put(`/tasks/update/plan/${id}`, { task_plan: plan === "" ? null : plan });  
-        updatePlanSuccess = true;
+      if (taskState === "OPEN" || taskState === "DONE") {
+        await axios.put(`/tasks/update/plan/${id}`, { task_plan: plan === "" ? null : plan });
+        showSnackbar("Task plan updated successfully!", "success");
+        return true;
       }
     } catch (error) {
-
-
       if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.message || "";
         if (errorMessage.includes("not found")) {
@@ -108,18 +106,18 @@ const DetailedTask = () => {
         showSnackbar("Failed to update plan.", "error");
       }
     }
-  
-    if (updateNoteSuccess && updatePlanSuccess) {
-      showSnackbar("Task notes & plan updated successfully!", "success");
-    }
-    else if (updateNoteSuccess) {
-      showSnackbar("Task notes updated successfully!", "success");
-    }
-    else if (updatePlanSuccess) {
-      showSnackbar("Task plan updated successfully!", "success");
-    }
+    return false;
   };
   
+  const handleUpdateTask = async () => {
+    const noteSuccess = await updateTaskNotes();
+    const planSuccess = await updateTaskPlan();
+  
+    if (noteSuccess && planSuccess) {
+      showSnackbar("Task notes & plan updated successfully!", "success");
+    }
+  };  
+
 
   const convertState = (state) => {
     switch(state) {
@@ -203,7 +201,7 @@ const DetailedTask = () => {
         </Box>
       </Box>
     <Box sx={{display: 'flex', justifyContent: 'flex-end' }}>
-       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} />
+       <ButtonCombinations taskState={taskState} handleUpdateTask={handleUpdateTask} permits={permits} newNote ={newNote} />
     </Box>
     <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>{snackbar.message}</Alert>

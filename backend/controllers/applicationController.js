@@ -56,11 +56,8 @@ const createApplication = async (req, res) => {
             return res.status(400).json({ message: 'Application acronym must be alphanumeric and have a maximum length of 50 characters' });
         }
 
-        if(App_description?.length > 1000){
-            return res.status(400).json({ message: 'Application description must have a maximum length of 1000 characters' });
-        }
-
-        if(App_rNumber < 0 || App_rNumber > MAX_INT){
+        
+        if(App_rNumber < 0 || App_rNumber > Number.MAX_SAFE_INTEGER){
             return res.status(400).json({ message: 'RNumber must be a positive integer' });
         }
 
@@ -174,6 +171,9 @@ const checkAppPermit = async (username, state, appid) => {
     }
     else if (state === "CREATE"){
         state = "Create";
+    }
+    else if (state === "CLOSED"){
+        return false;
     }
 
     const query = `SELECT App_permit_${state} FROM Application WHERE App_Acronym = ?`;

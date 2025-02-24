@@ -3,7 +3,7 @@ import { Box, Button, Snackbar, Alert } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
+const ButtonCombinations = ({ taskState, handleUpdateTask, permits, newNote }) => {
   const task_id = useParams().id;
   const navigate = useNavigate();
 
@@ -34,6 +34,24 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
     }
   };
 
+  const handleApprove = async () => {
+    try {
+      await axios.post(`/tasks/approve/${task_id}`, {newNote: newNote});
+      showSnackbar("Task approved!");
+
+      setTimeout(() => navigate(-1), 1000);
+    } catch (error) {
+      if(error.response && error.response.status === 403) {
+        showSnackbar("Unauthorized", "error");
+        setTimeout(() => navigate(-1), 1000);
+        return;
+      }
+      console.error(error);
+      showSnackbar("An error occurred", "error");
+    }
+  }
+  
+
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
@@ -42,7 +60,20 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
             <Button onClick={() => handleAction(`/tasks/release/${task_id}`, "Task released successfully!")} variant="contained">
               Release Task
             </Button>
-            <Button onClick={() => {handleUpdateTask; setTimeout(() => navigate(-1),1000 )}} variant="contained">
+            <Button onClick={async () => {
+              try {
+              await handleUpdateTask(); 
+              setTimeout(() => navigate(-1),1000 )
+              } catch (error) {
+                if(error.response && error.response.status === 403) {
+                  showSnackbar("Unauthorized", "error");
+                  setTimeout(() => navigate(-1), 1000);
+                  return;
+                }
+                console.error(error);
+                showSnackbar("An error occurred", "error");
+              }}} 
+              variant="contained">
               Save Changes
             </Button>
           </>
@@ -78,11 +109,8 @@ const ButtonCombinations = ({ taskState, handleUpdateTask, permits }) => {
             <Button onClick={() => handleAction(`/tasks/reject/${task_id}`, "Task rejected!")} variant="contained">
               Reject Task
             </Button>
-            <Button onClick={() => handleAction(`/tasks/approve/${task_id}`, "Task approved!")} variant="contained">
+            <Button onClick={handleApprove} variant="contained">
               Approve Task
-            </Button>
-            <Button onClick={handleUpdateTask} variant="contained">
-              Save Changes
             </Button>
           </>
         )}

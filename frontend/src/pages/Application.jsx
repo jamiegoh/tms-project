@@ -122,9 +122,23 @@ const Application = () => {
         App_permit_Done: newAppPermits.done,
       };
 
+      setNewAppAcronym("");
+      setNewAppDescription("");
+      setNewAppRNumber(0);
+      setNewAppStartDate("");
+      setNewAppEndDate("");
+      setNewAppPermits({
+        create: "",
+        open: "",
+        toDoList: "",
+        doing: "",
+        done: "",
+      });
+
       await axios.post("/application/create", newApplication);
 
       setApplication([...application, newApplication]);
+
 
       setSnackbarInfo({
         message: "Application created successfully.",
@@ -209,6 +223,7 @@ const Application = () => {
                 label="Application Acronym"
                 variant="outlined"
                 onChange={(e) => setNewAppAcronym(e.target.value)}
+                value={newAppAcronym}
               />
             </TableCell>
             <TableCell>
@@ -216,6 +231,7 @@ const Application = () => {
                 label="Description"
                 variant="outlined"
                 onChange={(e) => setNewAppDescription(e.target.value)}
+                value={newAppDescription}
               />
             </TableCell>
             <TableCell>
@@ -224,6 +240,7 @@ const Application = () => {
                 variant="outlined"
                 type="number"
                 onChange={(e) => setNewAppRNumber(e.target.value)}
+                value={newAppRNumber}
               />
             </TableCell>
             <TableCell>
@@ -242,7 +259,6 @@ const Application = () => {
                 value = {newAppEndDate}
               />
             </TableCell>
-            {/* Single select dropdowns for each App_permit field */}
             <TableCell>
               <Select
                 value={newAppPermits.create || ""}
