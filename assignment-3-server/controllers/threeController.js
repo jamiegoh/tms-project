@@ -1,5 +1,6 @@
 const db = require('../db');
 const bcrypt = require('bcryptjs');
+const mail = require('../util/emailService');
 
 const checkAppPermit = async (username, state, appid) => {
     try {
@@ -237,8 +238,12 @@ const getTaskByState = async (req, res) => {
             return res.status(400).json({ message: 'Invalid or missing task application acronym' });
         }
 
-
-        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);
+        try {
+        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);}
+        catch (err) {
+            //task app acronym not found
+            return res.status(500).json({ message: 'Failed to get tasks' });
+        }
 
         res.json(tasks);
 
@@ -248,8 +253,89 @@ const getTaskByState = async (req, res) => {
     } 
 };
 
+const promoteTask2Done = async (req, res) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const { username, password, task_id, notes } = req.body;
+
+        if (!username || typeof username !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing username' });
+        }
+        if (!password || typeof password !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing password' });
+        }
+        if(!task_id || typeof task_id !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing task id' });
+        }
+
+        if(notes && typeof notes !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid notes' });
+        }
+
+        if (notes && notes.length > 65535) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Notes too long' });
+        }
+        
+
+        const isMatch = await checkCredentials(username, password);
+        if (!isMatch) {
+            await connection.rollback();
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const [task] = await connection.execute("SELECT * FROM Task WHERE Task_id = ?", [task_id]);
+        if (task.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not found' });
+        }
+
+        const task_state = task[0].Task_state;
+        if (task_state !== 'DOING') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Task not in DOING state' });
+        }
+
+        const note = {
+            text: notes,
+            user: username,
+            date_posted: new Date(),
+            type: 'comment',
+            currState: task[0].Task_state,
+        }
+
+        let parsedNotes = task[0]?.Task_notes ? JSON.parse(task[0].Task_notes) : [];
+        parsedNotes.unshift(note);
+
+        parsedNotes = notes ? parsedNotes : null;
+
+        const task_app_acronym = task[0].Task_app_Acronym;
+        if (!(await checkAppPermit(username, 'DONE', task_app_acronym))) {
+            await connection.rollback();
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        await connection.execute("UPDATE Task SET Task_state = 'DONE', Task_notes = ? WHERE Task_id = ?", [ parsedNotes, task_id]);
+        await mail({ app_acronym: task[0].Task_app_Acronym, task_id: task_id });
 
 
+        await connection.commit();
+        res.json({ message: 'Task promoted to DONE state' });
+
+    } catch (err) {
+        await connection.rollback();
+        console.error("Error promoting task to DONE:", err);
+        res.status(500).json({ message: 'Internal server error', error: err });
+    } finally {
+        connection.release();
+    }
+}
 
 
-module.exports = {createTask, getTaskByState};
+module.exports = {createTask, getTaskByState, promoteTask2Done};
