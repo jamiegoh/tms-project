@@ -95,8 +95,6 @@ const checkAppPermit = async (username, state, appid) => {
         
 
         // Check App Permit
-       
-        
         const { task_app_acronym, task_name, task_description, task_plan, username, password } = req.body;
         
         if (!username || typeof username !== 'string') {
@@ -209,6 +207,49 @@ const checkAppPermit = async (username, state, appid) => {
     }
 };
 
+const getTaskByState = async (req, res) => {
+    //no transaction as it is a read operation
+    const connection = await db.getConnection();
+    try {
+        const { username, password, task_app_acronym, state } = req.body;
+
+        if (!username || typeof username !== 'string') {
+            return res.status(400).json({ message: 'Invalid or missing username' });
+        }
+        if (!password || typeof password !== 'string') {
+            return res.status(400).json({ message: 'Invalid or missing password' });
+        }
+
+        const isMatch = await checkCredentials(username, password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        if (!state || typeof state !== 'string' || !['OPEN', 'TODO', 'DOING', 'DONE', 'CLOSED'].includes(state.toUpperCase())) {
+            return res.status(400).json({ message: 'Invalid or missing task state' });
+        }
+
+        if (!(await checkAppPermit(username, state.toUpperCase(), task_app_acronym))) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        if (!task_app_acronym || typeof task_app_acronym !== 'string') {
+            return res.status(400).json({ message: 'Invalid or missing task application acronym' });
+        }
 
 
-module.exports = {createTask};
+        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);
+
+        res.json(tasks);
+
+    } catch (err) {
+        console.error("Error getting tasks by state:", err);
+        res.status(500).json({ message: 'Internal server error', error: err });
+    } 
+};
+
+
+
+
+
+module.exports = {createTask, getTaskByState};
