@@ -9,10 +9,10 @@ const { checkPermissions } = require("../middleware/permissions");
 
 router.get("/get",checkPermissions, getUsers);
 router.post("/create", checkPermissions, createUser);
-router.post("/update", checkPermissions, updateUser);
+router.put("/update", checkPermissions, updateUser);
 router.get("/current", currentUser);
 router.get("/currentDetails", getSpecificUserByUsername);
-router.post("/updateSelf", updateSelf);
+router.put("/updateSelf", updateSelf);
 
 
 

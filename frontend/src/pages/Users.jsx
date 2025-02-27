@@ -169,7 +169,7 @@ export default function Users() {
         return;
       }
 
-      await axios.post("http://localhost:8000/users/update", {
+      await axios.put("http://localhost:8000/users/update", {
         username: user.user_username,
         inputPassword: updatedUserPassword[i],
         inputEmail: user.user_email,

@@ -47,8 +47,6 @@ const checkGroup = async (username, group) => {
             "SELECT user_group_groupName FROM user_group WHERE user_group_username = ?", [username]
         );
 
-        
-
         return groups[0].some(g => g.user_group_groupName === group);
     } catch (err) {
         console.error("Error selecting data:", err);
