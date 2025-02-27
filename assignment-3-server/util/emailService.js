@@ -26,12 +26,10 @@ async function mail({ app_acronym, task_id }) {
         usernames
     );
 
-    let subject, text;
+    const emailList = emails.map(email => email.user_email);
     
-    const emailList = emails.map(email => email.user_email).join(", ");
-
-        subject = `${app_acronym} - New task in Done state for review! - ${task_id}`;
-        text = `New Task for review in ${app_acronym}! Log in to approve/reject`;
+    const subject = `${app_acronym} - New task in Done state for review! - ${task_id}`;
+    const text = `New Task for review in ${app_acronym}! Log in to approve/reject`;
 
   const info = await transporter.sendMail({
     from: '" TMS System 👻" <rossie.marks@ethereal.email>', // sender address

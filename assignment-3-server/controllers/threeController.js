@@ -97,40 +97,18 @@ const checkAppPermit = async (username, state, appid) => {
 
         // Check App Permit
         const { task_app_acronym, task_name, task_description, task_plan, username, password } = req.body;
+
+
+        //PAYLOAD ERRORS 
         
-        if (!username || typeof username !== 'string') {
-            await connection.rollback();
-            return res.status(400).json({ message: 'Invalid or missing username' });
-        }
-        if (!password || typeof password !== 'string') {
-            await connection.rollback();
-            return res.status(400).json({ message: 'Invalid or missing password' });
-        }
-
-        // Check username and password
-        const isMatch = await checkCredentials(username, password);
-        if (!isMatch) {
-            await connection.rollback();
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        if (!(await checkAppPermit(username, "CREATE", task_app_acronym))) {
-            await connection.rollback();
-            return res.status(403).json({ message: 'Forbidden: No Create Permission' });
-        }
-
-        // Check if application exists
-        const [app_r_number] = await connection.execute("SELECT App_Rnumber FROM Application WHERE App_Acronym = ?", [task_app_acronym]);
-        if (app_r_number.length === 0) {
-            await connection.rollback();
-            return res.status(400).json({ message: 'Application not found' });
-        }
-
-        // Validate required fields
         if (!task_app_acronym || typeof task_app_acronym !== 'string') {
             await connection.rollback();
             return res.status(400).json({ message: 'Invalid or missing task application acronym' });
         }
+
+
+        // Validate required fields
+
         if (!task_name || typeof task_name !== 'string') {
             await connection.rollback();
             return res.status(400).json({ message: 'Invalid or missing task name' });
@@ -143,6 +121,8 @@ const checkAppPermit = async (username, state, appid) => {
             await connection.rollback();
             return res.status(400).json({ message: 'Invalid task description' });
         }
+
+        
         
         // Validate formats
         const nameRegex = /^[a-zA-Z0-9 ]{1,50}$/;
@@ -161,6 +141,39 @@ const checkAppPermit = async (username, state, appid) => {
         }
 
 
+        //IAM ERRORS 
+
+        if (!username || typeof username !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing username' });
+        }
+        if (!password || typeof password !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing password' });
+        }
+
+        // Check username and password
+        const isMatch = await checkCredentials(username, password);
+        if (!isMatch) {
+            await connection.rollback();
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        //TRANSACTION ERRORS 
+
+        
+        
+        if (!(await checkAppPermit(username, "CREATE", task_app_acronym))) {
+            await connection.rollback();
+            return res.status(403).json({ message: 'Forbidden: No Create Permission' });
+        }
+        
+        const [app_r_number] = await connection.execute("SELECT App_Rnumber FROM Application WHERE App_Acronym = ?", [task_app_acronym]);
+        if (app_r_number.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Application not found' });
+        }        
+        
         // Check if task plan exists (if provided)
         if (task_plan) {
             const [plan] = await connection.execute("SELECT * FROM Plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?", [task_plan, task_app_acronym]);
@@ -172,7 +185,7 @@ const checkAppPermit = async (username, state, appid) => {
 
         // Generate task_id
         const app_r_number_value = app_r_number[0].App_Rnumber;
-        if(app_r_number_value === Number.MAX_SAFE_INTEGER){
+        if(app_r_number_value ===  2147483647){
             await connection.rollback();
             return res.status(400).json({ message: 'Max App_Rnumber reached' });
         }
@@ -189,12 +202,7 @@ const checkAppPermit = async (username, state, appid) => {
 
         // Increment App_Rnumber
         const new_r_number = app_r_number_value + 1;
-        try {
-            await connection.execute("UPDATE Application SET App_Rnumber = ? WHERE App_Acronym = ?", [new_r_number, task_app_acronym]);}
-        catch (err) {
-            await connection.rollback();
-            return res.status(500).json({ message: 'Failed to increment App_Rnumber' });
-        }
+        await connection.execute("UPDATE Application SET App_Rnumber = ? WHERE App_Acronym = ?", [new_r_number, task_app_acronym]);
 
         await connection.commit();
         res.json({ message: 'Task created successfully' });
@@ -208,11 +216,22 @@ const checkAppPermit = async (username, state, appid) => {
     }
 };
 
-const getTaskByState = async (req, res) => {
+const getTaskbyState = async (req, res) => {
     //no transaction as it is a read operation
     const connection = await db.getConnection();
     try {
         const { username, password, task_app_acronym, state } = req.body;
+
+      
+
+        if (!state || typeof state !== 'string' || !['OPEN', 'TODO', 'DOING', 'DONE', 'CLOSED'].includes(state.toUpperCase())) {
+            return res.status(400).json({ message: 'Invalid or missing task state' });
+        }
+
+
+        if (!task_app_acronym || typeof task_app_acronym !== 'string') {
+            return res.status(400).json({ message: 'Invalid or missing task application acronym' });
+        }
 
         if (!username || typeof username !== 'string') {
             return res.status(400).json({ message: 'Invalid or missing username' });
@@ -224,18 +243,6 @@ const getTaskByState = async (req, res) => {
         const isMatch = await checkCredentials(username, password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        if (!state || typeof state !== 'string' || !['OPEN', 'TODO', 'DOING', 'DONE', 'CLOSED'].includes(state.toUpperCase())) {
-            return res.status(400).json({ message: 'Invalid or missing task state' });
-        }
-
-        if (!(await checkAppPermit(username, state.toUpperCase(), task_app_acronym))) {
-            return res.status(403).json({ message: 'Forbidden' });
-        }
-
-        if (!task_app_acronym || typeof task_app_acronym !== 'string') {
-            return res.status(400).json({ message: 'Invalid or missing task application acronym' });
         }
 
         try {
@@ -260,14 +267,7 @@ const promoteTask2Done = async (req, res) => {
 
         const { username, password, task_id, notes } = req.body;
 
-        if (!username || typeof username !== 'string') {
-            await connection.rollback();
-            return res.status(400).json({ message: 'Invalid or missing username' });
-        }
-        if (!password || typeof password !== 'string') {
-            await connection.rollback();
-            return res.status(400).json({ message: 'Invalid or missing password' });
-        }
+        
         if(!task_id || typeof task_id !== 'string') {
             await connection.rollback();
             return res.status(400).json({ message: 'Invalid or missing task id' });
@@ -282,8 +282,16 @@ const promoteTask2Done = async (req, res) => {
             await connection.rollback();
             return res.status(400).json({ message: 'Notes too long' });
         }
-        
 
+        if (!username || typeof username !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing username' });
+        }
+        if (!password || typeof password !== 'string') {
+            await connection.rollback();
+            return res.status(400).json({ message: 'Invalid or missing password' });
+        }
+        
         const isMatch = await checkCredentials(username, password);
         if (!isMatch) {
             await connection.rollback();
@@ -338,4 +346,4 @@ const promoteTask2Done = async (req, res) => {
 }
 
 
-module.exports = {createTask, getTaskByState, promoteTask2Done};
+module.exports = {createTask, getTaskbyState, promoteTask2Done};
