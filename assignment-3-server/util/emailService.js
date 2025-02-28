@@ -33,7 +33,7 @@ async function mail({ app_acronym, task_id }) {
     const text = `New Task for review in ${app_acronym}! Log in to approve/reject`;
 
   const info = await transporter.sendMail({
-    from: '" TMS System 👻" <rossie.marks@ethereal.email>', // sender address
+    from: '" TMS System 👻" <kaley.parker69@ethereal.email>', // sender address
     to: emailList, // list of receivers
     subject: subject,
     text: text,

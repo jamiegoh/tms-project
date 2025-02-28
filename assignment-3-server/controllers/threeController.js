@@ -159,7 +159,7 @@ const checkAppPermit = async (username, state, appid) => {
         await connection.execute("UPDATE Application SET App_Rnumber = ? WHERE App_Acronym = ?", [new_r_number, task_app_acronym]);
 
         await connection.commit();
-        res.status(200).json({ code: "S0001" });
+        res.status(200).json({ code: "S0001", task_id: task_id });
 
     } catch (err) {
         await connection.rollback();
@@ -180,7 +180,7 @@ const getTaskbyState = async (req, res) => {
         }
 
 
-        const { username, password, task_app_acronym, state } = req.body;
+        const { username, password, task_app_acronym, task_state } = req.body;
 
         if (!username || typeof username !== 'string') {
             return res.status(400).json({ code: "E2001" });
@@ -188,7 +188,7 @@ const getTaskbyState = async (req, res) => {
         if (!password || typeof password !== 'string') {
             return res.status(400).json({code: "E2002"});
         }
-        if (!state || typeof state !== 'string' || !['OPEN', 'TODO', 'DOING', 'DONE', 'CLOSED'].includes(state.toUpperCase())) {
+        if (!task_state || typeof task_state !== 'string' || !['OPEN', 'TODO', 'DOING', 'DONE', 'CLOSED'].includes(task_state.toUpperCase())) {
             return res.status(400).json({ code: "E2008" });
         }
 
@@ -201,7 +201,7 @@ const getTaskbyState = async (req, res) => {
             return res.status(400).json({code: "E3001"});
         }
 
-        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);
+        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [task_state.toUpperCase(), task_app_acronym]);
 
         res.status(200).json({code: "S0001", tasks: tasks});
 
@@ -221,7 +221,7 @@ const promoteTask2Done = async (req, res) => {
         }
 
 
-        const { username, password, task_id, notes } = req.body;
+        const { username, password, task_id, task_notes } = req.body;
 
         
         if (!username || typeof username !== 'string') {
@@ -238,7 +238,7 @@ const promoteTask2Done = async (req, res) => {
             return res.status(400).json({code: "E2007"});
         }
 
-        if(notes && (typeof notes !== 'string')){ 
+        if(task_notes && (typeof task_notes !== 'string')){ 
             await connection.rollback();
             return res.status(400).json({code: "E2009"});
         }
@@ -271,10 +271,10 @@ const promoteTask2Done = async (req, res) => {
             currState: task_state
         }
         
-        if(notes){
+        if(task_notes){
 
             const note = {
-                text: notes,
+                text: task_notes,
                 user: username,
                 date_posted: new Date(),
                 type: 'comment',
@@ -289,7 +289,7 @@ const promoteTask2Done = async (req, res) => {
 
 
         const task_app_acronym = task[0].Task_app_Acronym;
-        if (!(await checkAppPermit(username, 'DONE', task_app_acronym))) {
+        if (!(await checkAppPermit(username, 'DOING', task_app_acronym))) {
             await connection.rollback();
             return res.status(400).json({ code: "E3002" });
         }
