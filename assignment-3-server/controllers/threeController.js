@@ -299,7 +299,7 @@ const promoteTask2Done = async (req, res) => {
             return res.status(400).json({ code: "E3002" });
         }
 
-        if(parsedNotes.length > 4294967295){
+        if(JSON.stringify(parsedNotes).length > 4294967295){
             await connection.rollback();
             return res.status(400).json({ code: "E4004" });
         }
