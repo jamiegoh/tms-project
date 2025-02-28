@@ -201,12 +201,7 @@ const getTaskbyState = async (req, res) => {
             return res.status(400).json({code: "E3001"});
         }
 
-        try {
-        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);}
-        catch (err) {
-            //task app acronym not found
-            return res.status(400).json({code: "E3002"});
-        }
+        const [tasks] = await connection.execute("SELECT * FROM Task WHERE Task_state = ? AND Task_app_Acronym = ?", [state, task_app_acronym]);
 
         res.status(200).json({code: "S0001", tasks: tasks});
 
