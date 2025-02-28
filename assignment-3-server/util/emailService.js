@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
 });
 
 async function mail({ app_acronym, task_id }) {
+  try {
 
     const [appPermit] = await db.execute("SELECT App_permit_Done FROM Application WHERE app_acronym = ?", [app_acronym]);
 
@@ -39,6 +40,9 @@ async function mail({ app_acronym, task_id }) {
   });
 
   console.log("Message sent: %s", info.messageId);
+} catch (error) {
+  console.log(error);
+}
 }
 
 

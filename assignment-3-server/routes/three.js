@@ -6,8 +6,8 @@ const {createTask, getTaskbyState, promoteTask2Done} = require('../controllers/t
 router.post("/CreateTask", createTask);
 router.post("/GetTaskbyState", getTaskbyState);
 router.patch("/PromoteTask2Done", promoteTask2Done);
-router.get("/*", (req, res) => {
-    res.status(404).send("Invalid URL");
+router.all("/*", (req, res) => {
+    res.status(400).send({code: "E1001"});
 });
 
 
